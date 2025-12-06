@@ -1,0 +1,26 @@
+# Chapter 18: Sim-to-Real Transfer
+
+"Simulation is doomed to succeed." — The reality gap is the hardest problem in robotics.
+
+## The Reality Gap
+
+Why does code work in Isaac Sim but fail on a real robot?
+1.  **Friction:** Real friction is complex; simulated friction is a simple coefficient.
+2.  **Sensor Noise:** Real cameras have motion blur and lighting artifacts.
+3.  **Latency:** Real networks have delays; simulation is instantaneous.
+4.  **Actuator Dynamics:** Real motors get hot and have backlash.
+
+## Bridging the Gap
+
+### 1. Domain Randomization
+Train your AI on 10,000 variations of the world (different lighting, floor friction, object masses). If it works in all of them, it's likely to work in the real world (which is just another variation).
+
+### 2. System Identification
+Measure the real robot's properties (mass distribution, motor torque curves) and update the simulation URDF to match exactly.
+
+## Deployment to Jetson
+
+When you are ready to deploy:
+1.  **Containerize:** Use Docker to package your ROS 2 workspace.
+2.  **Optimize:** Use TensorRT to compile your AI models for the Jetson GPU.
+3.  **Safety First:** Always have a physical **Emergency Stop (E-Stop)** button ready.

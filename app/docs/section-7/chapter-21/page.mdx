@@ -1,0 +1,25 @@
+# Chapter 21: Robotics Lab Setup
+
+Setting up a physical space for robotics requires safety and utility.
+
+## Robot Platforms
+
+### 1. Budget / Entry Level
+*   **Unitree Go2 (Edu):** A quadruped with LiDAR and Camera. Great SDK.
+*   **TurtleBot 4:** The standard ROS 2 learning platform (wheeled).
+*   **Open Manipulator:** A simple robotic arm for learning kinematics.
+
+### 2. Mini Humanoids
+*   **Robotis OP3:** Small, fully programmable.
+*   **TonyPi:** Very cheap, good for basic gait learning.
+
+### 3. Advanced Humanoids
+*   **Unitree G1:** A $16k humanoid capable of complex tasks.
+*   **Fourier GR-1:** Another accessible humanoid platform.
+
+## Safety Considerations
+
+1.  **Emergency Stop (E-Stop):** Every robot must have a hardware kill switch.
+2.  **Gantry / Tether:** When testing walking algorithms, hang the robot from a gantry so it doesn't break when it falls.
+3.  **Fire Safety:** LiPo batteries can catch fire. Have a Class D fire extinguisher and a sand bucket nearby.
+4.  **Networking:** Isolate robot traffic on a separate VLAN to prevent network congestion.

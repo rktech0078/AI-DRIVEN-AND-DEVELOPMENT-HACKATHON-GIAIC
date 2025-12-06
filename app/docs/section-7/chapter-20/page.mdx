@@ -1,0 +1,24 @@
+# Chapter 20: Edge AI Kits
+
+If you are building a physical robot, you need an onboard computer (the "Brain").
+
+## NVIDIA Jetson Orin
+
+The standard for mobile robotics.
+*   **Jetson Orin Nano:** Entry level. Good for basic ROS 2 and simple vision.
+*   **Jetson Orin NX:** Mid-range. Good for VSLAM and basic LLMs.
+*   **Jetson AGX Orin:** High-end. Desktop-class performance. Required for running VLA models or heavy simulations onboard.
+
+## Sensors
+
+### Cameras
+*   **Intel RealSense D435i:** The industry standard for depth sensing.
+*   **Stereolabs ZED 2i:** Great for outdoor stereo vision.
+*   **Oak-D:** Camera with built-in AI processing.
+
+### LiDAR
+*   **RPLIDAR A1/A2:** Low cost 2D LiDAR for indoor mapping.
+*   **Velodyne / Ouster:** 3D LiDAR (expensive, used in autonomous cars).
+
+### Audio
+*   **ReSpeaker Mic Array:** 4-mic array for capturing voice commands and direction of arrival (DoA).

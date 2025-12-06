@@ -1,0 +1,45 @@
+# Chapter 2: Sensors, Perception & Human-Like Sensing
+
+Perception is the foundation of Physical AI. Before a robot can act, it must sense and understand its environment.
+
+## Visual Perception: Cameras, LiDAR, ToF
+
+### RGB Cameras (The Eyes)
+Standard cameras provide rich semantic information (color, texture, text).
+*   **Use case:** Object recognition, reading signs, VLA inputs.
+*   **Limitation:** No inherent depth information; sensitive to lighting.
+
+### Depth Sensing
+To interact with the world, robots need to know *how far* things are.
+
+1.  **Stereo Cameras:** Use two lenses (like human eyes) to calculate depth via disparity. Good for outdoors.
+2.  **Time-of-Flight (ToF):** Emits light pulses and measures return time. High accuracy, good for indoors.
+3.  **LiDAR (Light Detection and Ranging):** Uses laser pulses to create precise 3D point clouds. Essential for mapping (SLAM).
+
+## Proprioception: IMU & Force Sensors
+
+Just as humans know where their limbs are without looking, robots use **proprioception**.
+
+*   **IMU (Inertial Measurement Unit):** The "inner ear" of the robot. Measures acceleration (accelerometer) and rotation (gyroscope) to maintain balance.
+*   **Encoders:** Measure the exact angle of every joint motor.
+*   **Force/Torque Sensors:** Located in the feet or wrists. They allow the robot to "feel" the ground or the weight of an object.
+
+## Sensor Fusion
+
+No single sensor is perfect. **Sensor Fusion** combines data to reduce uncertainty.
+
+> **Example:**
+> A camera might see a "wall" that is actually just a curtain. A LiDAR might see through it. Fusing these inputs allows the robot to understand it can pass through.
+
+Common algorithm: **Kalman Filter** (estimates the state of a system from noisy measurements).
+
+## How Perception Forms the Robotic Brain
+
+Perception is not just recording data; it's about building a **World Model**.
+
+1.  **Raw Data:** Pixels, point clouds.
+2.  **Feature Extraction:** Edges, surfaces, objects.
+3.  **Semantic Understanding:** "This is a door," "This is a slippery floor."
+4.  **Affordance:** "I can open this door," "I should walk slowly here."
+
+In modern Physical AI, **End-to-End Neural Networks** are starting to replace these manual steps, taking raw pixels and outputting motor commands directly.

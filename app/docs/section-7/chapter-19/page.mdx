@@ -1,0 +1,22 @@
+# Chapter 19: Hardware Requirements
+
+To participate in the Physical AI hackathon, you need a robust development environment.
+
+## The Workstation (PC/Laptop)
+
+You cannot run Isaac Sim or train VLA models on a Chromebook.
+
+*   **OS:** Ubuntu 22.04 LTS (Dual boot recommended over VM).
+*   **CPU:** Intel i7/i9 (12th Gen+) or AMD Ryzen 7/9.
+*   **RAM:** 32GB minimum (64GB recommended for Isaac Sim).
+*   **Storage:** 1TB NVMe SSD (Simulations take a lot of space).
+
+### The Critical Component: GPU
+NVIDIA is mandatory for Isaac Sim and Isaac ROS.
+*   **Minimum:** RTX 3060 (12GB VRAM).
+*   **Recommended:** RTX 4080 or RTX 4090.
+*   **Why?** Isaac Sim requires Ray Tracing (RTX) cores. VLA models require significant VRAM.
+
+## Networking
+*   **Router:** Wi-Fi 6 router (for low latency communication with the robot).
+*   **Ethernet:** Gigabit switch for wired connections during debugging.

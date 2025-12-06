@@ -1,0 +1,28 @@
+# Chapter 11: Isaac ROS
+
+**Isaac ROS** is a collection of hardware-accelerated ROS 2 packages (GEMs) that run on NVIDIA GPUs (Jetson or discrete GPUs). They provide highly optimized algorithms for perception and navigation.
+
+## GPU-Accelerated VSLAM
+
+**Visual SLAM (Simultaneous Localization and Mapping)** uses cameras to track the robot's position.
+*   **Package:** `isaac_ros_visual_slam`
+*   **Input:** Stereo images or RGB-D.
+*   **Output:** Robot pose (Odometry).
+*   **Performance:** Runs significantly faster than CPU-based SLAM (like ORB-SLAM).
+
+## Depth Processing
+
+Stereo cameras (like RealSense or ZED) produce disparity maps. Isaac ROS uses the GPU to compute these maps with high accuracy and speed.
+*   **Package:** `isaac_ros_stereo_image_proc`
+*   **Feature:** ESS (Ess Disparity) - uses AI to fill in holes in the depth map.
+
+## Perception Nodes
+
+Isaac ROS provides pre-trained models for object detection:
+*   **YOLOv8 / DetectNet:** Detect people, cars, and objects.
+*   **Segmentation:** Identify drivable surfaces vs. obstacles.
+*   **AprilTags:** Fast detection of fiducial markers for docking.
+
+## Nvblox (3D Reconstruction)
+
+**Nvblox** builds a 3D voxel map of the environment in real-time on the GPU. This is crucial for navigation, as it allows the robot to avoid 3D obstacles (like overhanging tables) that a 2D LiDAR might miss.

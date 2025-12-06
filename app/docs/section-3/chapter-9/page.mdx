@@ -1,0 +1,27 @@
+# Chapter 9: Unity for Robotics Visualization
+
+**Unity** is a game engine, but its high-fidelity rendering and physics make it excellent for robotics, especially for **Human-Robot Interaction (HRI)** and **Reinforcement Learning**.
+
+## Unity Robotics Hub
+
+Unity provides a set of tools specifically for ROS integration:
+*   **URDF Importer:** Drag and drop your ROS robot description into Unity.
+*   **ROS-TCP-Connector:** A high-speed link between Unity (C#) and ROS 2 (Python/C++).
+
+## Why Unity?
+
+| Feature | Gazebo | Unity |
+| :--- | :--- | :--- |
+| **Graphics** | Functional | Photorealistic |
+| **Physics** | Accurate (ODE/Dart) | Fast (PhysX), Game-like |
+| **Assets** | Limited | Massive Asset Store |
+| **VR/AR** | Limited | Native Support |
+
+## Setting Up a Scene
+
+1.  **Install Unity Hub & Editor.**
+2.  **Import Packages:** Add `Unity Robotics Hub` from the package manager.
+3.  **Setup ROS Connection:** Configure the IP address of your ROS 2 machine.
+4.  **Import Robot:** Use the URDF Importer wizard.
+
+Unity is particularly powerful for **Synthetic Data Generation**—creating thousands of labeled images to train computer vision models before they ever see the real world.

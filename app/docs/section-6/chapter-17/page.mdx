@@ -1,0 +1,34 @@
+# Chapter 17: Capstone Requirements
+
+The final project for this course is to build (in simulation) and program an **Autonomous Humanoid Agent**.
+
+## The Mission
+
+Your robot must complete the following "Grand Challenge":
+
+> **"Go to the kitchen, find the red apple, pick it up, and bring it to the living room table."**
+
+## Functional Requirements
+
+To achieve this, your robot must demonstrate:
+
+1.  **Voice Interaction:**
+    *   Listen to the command via microphone (simulated).
+    *   Transcribe audio to text (Whisper).
+
+2.  **Cognitive Reasoning:**
+    *   Parse the command into a plan: `[Navigate(Kitchen), Detect(Apple), Pick(Apple), Navigate(LivingRoom), Place(Table)]`.
+
+3.  **Navigation (SLAM & Path Planning):**
+    *   Map the environment.
+    *   Plan a path from Start -> Kitchen -> Living Room without hitting walls.
+
+4.  **Perception:**
+    *   Identify the "Red Apple" among other objects (segmentation/detection).
+
+5.  **Manipulation:**
+    *   Plan arm trajectory to reach the apple.
+    *   Grasp the apple without dropping it.
+
+6.  **Reporting:**
+    *   Speak back to the user: "Task complete. I have put the apple on the table."

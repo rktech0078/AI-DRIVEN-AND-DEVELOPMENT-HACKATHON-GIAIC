@@ -1,0 +1,30 @@
+# Chapter 13: Voice-to-Action (Whisper)
+
+The first step in a Vision-Language-Action (VLA) pipeline is understanding the user's intent through voice.
+
+## The Pipeline
+
+1.  **Audio Capture:** Microphone records user command.
+2.  **VAD (Voice Activity Detection):** Detects when speech starts and stops.
+3.  **STT (Speech-to-Text):** Converts audio to text.
+4.  **LLM:** Interprets the text.
+
+## OpenAI Whisper
+
+**Whisper** is a state-of-the-art open-source speech recognition model. It is robust to accents and background noise.
+
+```python
+import whisper
+
+model = whisper.load_model("base")
+result = model.transcribe("audio.mp3")
+print(result["text"])
+```
+
+## Handling Ambiguity
+
+Humans are vague. "Pick up that thing" is a hard command for a robot.
+*   **Context:** The robot needs to know *what* "that thing" refers to.
+*   **Clarification:** The agent should ask: "Do you mean the red cup or the blue bottle?"
+
+This is where the **LLM** comes in—it acts as the reasoning engine to resolve ambiguity before generating robot actions.

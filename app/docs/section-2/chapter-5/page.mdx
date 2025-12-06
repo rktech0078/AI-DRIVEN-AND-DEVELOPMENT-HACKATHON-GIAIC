@@ -1,0 +1,61 @@
+# Chapter 5: Building ROS 2 Packages
+
+In ROS 2, code is organized into **Packages**. A package can contain nodes, configuration files, launch files, and custom message definitions.
+
+## The Workspace
+
+You don't just create files anywhere. You work in a **Colcon Workspace**.
+
+```bash
+mkdir -p ~/ros2_ws/src
+cd ~/ros2_ws
+colcon build
+source install/setup.bash
+```
+
+## Creating a Python Package
+
+We will use `ament_python` as the build type.
+
+```bash
+cd ~/ros2_ws/src
+ros2 pkg create --build-type ament_python my_robot_controller
+```
+
+## Writing a Simple Publisher Node
+
+Here is a minimal Python node that publishes "Hello World":
+
+```python
+import rclpy
+from rclpy.node import Node
+from std_msgs.msg import String
+
+class SimplePublisher(Node):
+    def __init__(self):
+        super().__init__('simple_publisher')
+        self.publisher_ = self.create_publisher(String, 'topic', 10)
+        timer_period = 0.5  # seconds
+        self.timer = self.create_timer(timer_period, self.timer_callback)
+
+    def timer_callback(self):
+        msg = String()
+        msg.data = 'Hello World'
+        self.publisher_.publish(msg)
+        self.get_logger().info('Publishing: "%s"' % msg.data)
+
+def main(args=None):
+    rclpy.init(args=args)
+    node = SimplePublisher()
+    rclpy.spin(node)
+    node.destroy_node()
+    rclpy.shutdown()
+```
+
+## Debugging Tools
+
+### RQT Graph
+`rqt_graph` visualizes the network of nodes and topics. It's the first tool you should use when debugging connection issues.
+
+### ROS 2 Topic Echo
+`ros2 topic echo /topic_name` allows you to see the raw data passing through a topic.

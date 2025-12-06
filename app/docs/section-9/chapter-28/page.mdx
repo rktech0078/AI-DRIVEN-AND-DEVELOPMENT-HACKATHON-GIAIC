@@ -1,0 +1,30 @@
+# Chapter 28: Final Humanoid Project
+
+**Objective:** The Capstone. A fully autonomous humanoid task in simulation.
+
+## The Scenario
+
+You are in a simulated home environment (kitchen + living room).
+
+## The Task
+
+**"Clean the table."**
+
+## Steps
+
+1.  **Voice Command:** You speak "Clean the table" to the microphone.
+2.  **Reasoning:** The VLA/LLM agent breaks this down:
+    *   Find objects on table (Cup, Apple).
+    *   Determine destination (Cup -> Sink, Apple -> Bowl).
+3.  **Execution:**
+    *   Robot walks to table.
+    *   Robot picks up Cup.
+    *   Robot walks to Sink.
+    *   Robot places Cup.
+    *   (Repeat for Apple).
+
+## Evaluation Criteria
+
+*   **Success Rate:** How many times out of 10 does it succeed?
+*   **Speed:** Time to completion.
+*   **Smoothness:** Jerky movements vs smooth trajectories.

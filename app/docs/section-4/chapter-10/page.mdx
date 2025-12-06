@@ -1,0 +1,42 @@
+# Chapter 10: NVIDIA Isaac Sim
+
+**Isaac Sim** is a robotics simulation application and synthetic data generation tool built on the **NVIDIA Omniverse** platform. It is designed for photorealism and physically accurate simulation.
+
+## USD (Universal Scene Description)
+
+Omniverse uses **USD**, an open-source 3D scene description and file format developed by Pixar.
+*   **Layering:** You can have a base robot file and "layer" sensors or grippers on top without modifying the original file.
+*   **Non-destructive editing:** Changes are stored as "deltas."
+
+## Omniverse Pipeline
+
+1.  **Nucleus:** The database server that stores your USD files. Allows multiple users to edit the same world simultaneously.
+2.  **Kit:** The SDK that Isaac Sim is built on. You can write Python extensions to customize the simulator.
+3.  **RTC (Real-Time Collaboration):** Changes made by one user appear instantly for others.
+
+## Photorealistic Synthetic Data
+
+Training AI models requires massive amounts of data. Collecting this in the real world is slow. Isaac Sim allows **Domain Randomization**:
+
+*   **Visual Randomization:** Change lighting, textures, colors, and camera positions.
+*   **Physics Randomization:** Change friction, mass, and damping.
+
+This prevents the AI from "overfitting" to the simulation and helps it generalize to the real world.
+
+## Isaac Replicator
+
+**Replicator** is a set of APIs in Isaac Sim to automate data generation.
+
+```python
+import omni.replicator.core as rep
+
+with rep.new_layer():
+    camera = rep.create.camera(position=(0, 0, 100))
+    render_product = rep.create.render_product(camera, (1024, 1024))
+    
+    # Randomize position of a cube
+    cube = rep.create.cube(semantics=[('class', 'cube')])
+    with rep.trigger.on_frame(num_frames=10):
+        with cube:
+            rep.randomizer.position(min=(-50, -50, 0), max=(50, 50, 0))
+```

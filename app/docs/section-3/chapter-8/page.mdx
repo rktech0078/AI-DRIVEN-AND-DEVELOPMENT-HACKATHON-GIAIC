@@ -1,0 +1,32 @@
+# Chapter 8: Gazebo — Robotics Simulator
+
+**Gazebo** is the de facto standard simulator for the ROS community. There are two major versions:
+1.  **Gazebo Classic (Gazebo 11):** Stable, legacy.
+2.  **Gazebo (formerly Ignition):** The new, modular, modern version (Fortress, Harmonic).
+
+## Key Features
+
+*   **World Files (.sdf):** Define the environment (ground plane, sun, buildings, obstacles).
+*   **Model Database:** A cloud library of ready-to-use assets (tables, cars, people).
+*   **Plugins:** C++ code that controls the simulation logic (e.g., a plugin to make a conveyor belt move).
+
+## Spawning a Robot
+
+To get your URDF robot into Gazebo:
+
+1.  **Convert URDF to SDF:** Gazebo uses SDF (Simulation Description Format) internally. ROS 2 provides tools to convert on the fly.
+2.  **Launch Node:** Use `ros_gz_sim` (ROS 2 Gazebo Bridge).
+
+```bash
+ros2 launch ros_gz_sim gz_sim.launch.py gz_args:="-r empty.sdf"
+ros2 run ros_gz_sim create -topic /robot_description -name my_robot
+```
+
+## The ROS-Gazebo Bridge
+
+Gazebo runs as a separate process from ROS. We use a **Bridge** to connect them.
+*   Gazebo Topic: `/model/robot/cmd_vel`
+*   Bridge
+*   ROS 2 Topic: `/cmd_vel`
+
+This allows your ROS 2 control code to drive the simulated robot exactly as it would the real one.

@@ -1,0 +1,27 @@
+# Chapter 15: VLA Models
+
+**Vision-Language-Action (VLA)** models are the "Holy Grail" of Physical AI. Instead of separate modules (Vision -> Planning -> Control), a VLA is a single neural network that takes images and text as input and outputs robot actions directly.
+
+## How VLA Works
+
+*   **Input:**
+    *   Image: What the robot sees.
+    *   Text: "Put the apple in the bowl."
+*   **Backbone:** A Vision-Language Model (like CLIP or SigLIP) fused with an LLM.
+*   **Output:**
+    *   Tokenized Actions: Discrete numbers representing joint positions or end-effector movements (x, y, z, roll, pitch, yaw, gripper).
+
+## Examples of VLA Models
+
+1.  **RT-2 (Robotic Transformer 2):** Developed by Google DeepMind. It treats robot actions as just another "language" token.
+2.  **OpenVLA:** An open-source VLA model that can be fine-tuned for specific robots.
+
+## Closed-Loop Control
+
+VLA models operate in a closed loop:
+1.  **Observe:** Take a picture.
+2.  **Think:** VLA predicts the next small movement.
+3.  **Act:** Robot moves slightly.
+4.  **Repeat:** 10-50 times per second.
+
+This allows the robot to adjust to changes in real-time (e.g., if the object moves).

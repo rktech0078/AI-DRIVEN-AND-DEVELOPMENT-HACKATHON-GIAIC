@@ -1,0 +1,25 @@
+# Chapter 16: Humanoid Architecture
+
+Building an autonomous humanoid is like building a synthetic human. It requires integrating multiple complex systems into a cohesive whole.
+
+## The Anatomy of a Humanoid
+
+### 1. The Body (Actuators & Structure)
+*   **Skeleton:** Carbon fiber or aluminum frame.
+*   **Muscles:** High-torque actuators (motors + gearboxes).
+*   **Design:** 12-40 Degrees of Freedom (DoF). Legs need at least 6 DoF each for stable walking.
+
+### 2. The Nervous System (ROS 2 & DDS)
+*   **Spinal Cord:** The internal network (EtherCAT or CAN bus) connecting motors to the computer.
+*   **Reflexes:** Low-level motor controllers running at 1000Hz (1kHz) to maintain balance.
+*   **Communication:** ROS 2 topics carry messages between the brain and the body.
+
+### 3. The Senses (Perception)
+*   **Eyes:** Stereo cameras in the head.
+*   **Ears:** Microphone array for voice commands.
+*   **Balance:** IMU in the torso (pelvis).
+
+### 4. The Brain (AI & Compute)
+*   **Cerebellum (Motion Control):** Handles walking gait, balance, and IK.
+*   **Cerebrum (High-Level AI):** Handles VLA, reasoning, and task planning (LLMs).
+*   **Hardware:** Usually an NVIDIA Jetson Orin AGX.

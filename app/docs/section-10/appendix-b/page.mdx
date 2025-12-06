@@ -1,0 +1,31 @@
+# Appendix B — Cheatsheets
+
+## ROS 2 CLI
+
+| Command | Action |
+| :--- | :--- |
+| `ros2 run <pkg> <exec>` | Run a node |
+| `ros2 launch <pkg> <file>` | Run a launch file |
+| `ros2 topic list` | List topics |
+| `ros2 topic echo <topic>` | Print topic data |
+| `ros2 topic hz <topic>` | Check publishing rate |
+| `ros2 service list` | List services |
+| `ros2 param list` | List parameters |
+| `colcon build` | Build workspace |
+| `colcon build --packages-select <pkg>` | Build specific package |
+
+## Gazebo (Ignition)
+
+| Command | Action |
+| :--- | :--- |
+| `ign gazebo` | Start simulator |
+| `ign service -l` | List services |
+| `ign topic -l` | List topics |
+
+## Docker
+
+| Command | Action |
+| :--- | :--- |
+| `docker build -t <name> .` | Build image |
+| `docker run -it <name>` | Run container interactively |
+| `docker ps` | List running containers |

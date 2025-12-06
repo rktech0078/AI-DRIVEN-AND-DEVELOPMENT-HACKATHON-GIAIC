@@ -1,0 +1,40 @@
+# Chapter 14: Cognitive Reasoning Using LLMs
+
+Large Language Models (LLMs) like GPT-4 and Gemini are not just chatbots; they are **Reasoning Engines**. They can break down high-level goals into low-level steps.
+
+## Task Breakdown (Chain of Thought)
+
+**User Command:** "I spilled my coffee. Clean it up."
+
+**LLM Reasoning:**
+1.  *Identify Problem:* Spilled liquid on floor.
+2.  *Identify Solution:* Need a sponge or rag.
+3.  *Locate Tool:* Sponge is in the kitchen sink.
+4.  *Plan:*
+    *   Navigate to Kitchen.
+    *   Pick up Sponge.
+    *   Navigate to Spill.
+    *   Wipe floor.
+    *   Navigate to Trash/Sink.
+    *   Drop Sponge.
+
+## JSON Output for Robots
+
+Robots don't understand English paragraphs. We force the LLM to output structured JSON that maps to ROS 2 actions.
+
+```json
+{
+  "plan": [
+    {"action": "navigate", "target": "kitchen"},
+    {"action": "pick", "object": "sponge"},
+    {"action": "navigate", "target": "living_room_spill"},
+    {"action": "wipe", "surface": "floor"}
+  ]
+}
+```
+
+## Safety Constraints
+
+LLMs can hallucinate dangerous actions ("Jump out the window"). We must wrap the LLM output in a **Safety Layer**.
+*   **Rule-based checks:** "If action is 'jump', deny."
+*   **Physics checks:** "Is the object too heavy?"

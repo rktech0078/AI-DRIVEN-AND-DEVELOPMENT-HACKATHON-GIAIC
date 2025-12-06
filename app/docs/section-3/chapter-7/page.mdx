@@ -1,0 +1,24 @@
+# Chapter 7: Simulation Concepts
+
+Before deploying code to a physical robot (which can break, hurt someone, or run out of battery), we test in **Simulation**.
+
+## The Digital Twin
+
+A **Digital Twin** is a virtual replica of your physical robot and its environment.
+*   **Kinematic Accuracy:** Does it move like the real robot?
+*   **Visual Fidelity:** Does it look like the real world? (Important for Vision AI)
+*   **Physics Fidelity:** Do objects fall, slide, and bounce correctly?
+
+## Physics Engines
+
+Simulators rely on physics engines to solve the equations of motion.
+*   **ODE (Open Dynamics Engine):** Fast, stable, default in Gazebo Classic.
+*   **Bullet:** Good for collision detection.
+*   **PhysX (NVIDIA):** GPU-accelerated, extremely fast, used in Isaac Sim.
+
+## Sensor Simulation
+
+We don't just simulate the robot's body; we simulate its senses.
+*   **Ray Casting:** Used for LiDAR. Shoots rays and measures intersection distance.
+*   **Rendering:** Used for Cameras. Renders the 3D scene from the camera's perspective.
+*   **Noise Models:** Real sensors are noisy. Good simulations add Gaussian noise to synthetic data to make AI models robust.

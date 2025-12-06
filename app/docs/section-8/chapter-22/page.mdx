@@ -1,0 +1,30 @@
+# Chapter 22: Embedded RAG Chatbot
+
+This textbook is not static. It listens. We will build an embedded **RAG (Retrieval-Augmented Generation)** chatbot that knows every word in this book.
+
+## Architecture
+
+1.  **Knowledge Base:** The Markdown files of this book (`pages/**/*.mdx`).
+2.  **Ingestion Pipeline:**
+    *   Read MDX files.
+    *   Split into chunks (e.g., 500 characters).
+    *   Generate Embeddings (using OpenAI `text-embedding-3-small` or Gemini).
+    *   Store in Vector Database (**Qdrant** or **Neon** with pgvector).
+3.  **Chat Interface:**
+    *   User asks a question.
+    *   System searches Vector DB for relevant chunks.
+    *   System sends chunks + question to LLM (Gemini).
+    *   LLM answers with citation.
+
+## "Ask Selected Text" Feature
+
+A unique feature of this platform is context-aware asking.
+*   **User Action:** Highlight a paragraph about "Inverse Kinematics".
+*   **Context Menu:** Click "Explain this".
+*   **System:** Sends the *specific highlighted text* as context to the LLM, ensuring a precise explanation.
+
+## Tech Stack
+*   **Frontend:** React (Nextra).
+*   **Backend:** Next.js API Routes.
+*   **Database:** Neon (Postgres).
+*   **AI:** OpenAI SDK (configured for Gemini).

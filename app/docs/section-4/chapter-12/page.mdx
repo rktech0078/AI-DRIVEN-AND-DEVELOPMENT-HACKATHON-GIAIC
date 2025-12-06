@@ -1,0 +1,25 @@
+# Chapter 12: Navigation & Control
+
+Navigation is the art of getting from Point A to Point B without hitting anything.
+
+## Nav2 (Navigation 2 Stack)
+
+**Nav2** is the standard navigation framework for ROS 2. It uses Behavior Trees to manage complex navigation logic.
+
+1.  **Global Planner:** Calculates the path from Start to Goal (e.g., A* or Dijkstra).
+2.  **Local Planner (Controller):** Calculates the immediate velocity commands (`cmd_vel`) to follow the path while avoiding dynamic obstacles.
+3.  **Costmaps:** 2D grids representing safe and unsafe areas.
+
+## Biped Planning (Humanoids)
+
+Wheeled robots just roll. Humanoids must balance.
+*   **ZMP (Zero Moment Point):** The point where the robot's weight is centered. To stay balanced, the ZMP must be within the support polygon (the feet).
+*   **MPC (Model Predictive Control):** Predicts the robot's future state and optimizes footsteps to maintain balance.
+
+## IK / FK Motion Planning
+
+For the robot's arms:
+*   **Forward Kinematics (FK):** Given joint angles, where is the hand?
+*   **Inverse Kinematics (IK):** Given the hand position (x, y, z), what should the joint angles be?
+
+**MoveIt 2** is the standard library for motion planning in ROS 2. It handles collision checking and trajectory generation for arms.

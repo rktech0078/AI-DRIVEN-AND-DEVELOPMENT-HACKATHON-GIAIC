@@ -1,0 +1,54 @@
+# Chapter 6: Robot Description (URDF / SDF)
+
+To simulate a robot or visualize it in Rviz, ROS needs to know its physical properties. We use **URDF (Unified Robot Description Format)**.
+
+## The URDF Structure
+
+URDF is an XML format. It describes the robot as a tree of **Links** connected by **Joints**.
+
+### Links
+A rigid body part (e.g., chassis, wheel, arm segment).
+*   **Visual:** What you see (mesh or primitive shape).
+*   **Collision:** Simplified shape for physics calculations.
+*   **Inertial:** Mass and center of mass.
+
+### Joints
+The connection between links.
+*   **Fixed:** No movement (e.g., camera mounted on chassis).
+*   **Revolute:** Rotates around an axis (e.g., wheel).
+*   **Prismatic:** Slides along an axis (e.g., linear actuator).
+
+## Example URDF
+
+```xml
+<robot name="my_robot">
+  <!-- Base Link -->
+  <link name="base_link">
+    <visual>
+      <geometry>
+        <box size="0.5 0.3 0.1"/>
+      </geometry>
+    </visual>
+  </link>
+
+  <!-- Wheel Link -->
+  <link name="right_wheel">
+    <visual>
+      <geometry>
+        <cylinder length="0.05" radius="0.1"/>
+      </geometry>
+    </visual>
+  </link>
+
+  <!-- Joint -->
+  <joint name="base_to_right_wheel" type="continuous">
+    <parent link="base_link"/>
+    <child link="right_wheel"/>
+    <origin xyz="0 -0.2 0"/>
+  </joint>
+</robot>
+```
+
+## Xacro (XML Macros)
+
+Writing raw URDF is repetitive. **Xacro** allows you to use variables, math, and macros to generate URDFs dynamically.

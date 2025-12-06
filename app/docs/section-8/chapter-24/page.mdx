@@ -1,0 +1,21 @@
+# Chapter 24: Personalization Button
+
+Static text is a relic of the past. In this AI-Native book, you can **Rewrite** the content on the fly.
+
+## The "Personalize" Button
+
+Located at the top of every chapter. When clicked, it triggers a re-generation of the page content (streaming).
+
+### Modes
+
+1.  **Simplify:** Rewrites the chapter using simple analogies. Removes complex math.
+2.  **Deep Dive:** Adds mathematical proofs and code implementation details.
+3.  **Hardware-Specific:**
+    *   If user has **Jetson Nano**: Rewrites installation guides for ARM64 / Ubuntu 18.04.
+    *   If user has **Jetson Orin**: Rewrites for ARM64 / Ubuntu 22.04.
+
+## Implementation
+
+*   **Frontend:** Fetches the raw MDX content.
+*   **AI Request:** Sends content + User Preference to Gemini.
+*   **Streaming:** The new content replaces the old content paragraph by paragraph in real-time.

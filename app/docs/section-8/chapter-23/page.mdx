@@ -1,0 +1,25 @@
+# Chapter 23: User Signup & Personalization
+
+To provide a tailored learning experience, we need to know who the user is.
+
+## Authentication with Better-Auth
+
+We use **Better-Auth** for a secure, passwordless (or social) login experience.
+*   **Providers:** GitHub, Google.
+*   **Storage:** User session stored in HttpOnly cookies.
+
+## User Difficulty Adaptation
+
+Upon signup, we ask the user:
+> "What is your experience level with Robotics?"
+> 1.  **Beginner:** "I don't know what a matrix is."
+> 2.  **Intermediate:** "I have used ROS 1 before."
+> 3.  **Advanced:** "I build custom kernels for Jetson."
+
+This "User Level" is stored in the database and used to prompt the AI Agent.
+
+## Personalized Examples
+
+When the user asks "What is a Quaternion?", the AI checks their profile:
+*   **Beginner:** "Think of it like a magic way to rotate objects without them getting stuck."
+*   **Advanced:** "It's a 4D complex number system used to represent 3D rotations, avoiding Gimbal Lock."

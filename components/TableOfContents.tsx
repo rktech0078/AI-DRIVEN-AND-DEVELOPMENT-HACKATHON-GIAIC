@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 
 interface TocItem {
@@ -12,6 +13,7 @@ interface TocItem {
 export function TableOfContents() {
     const [items, setItems] = useState<TocItem[]>([])
     const [activeId, setActiveId] = useState<string>("")
+    const pathname = usePathname()
 
     useEffect(() => {
         const elements = Array.from(document.querySelectorAll("h2, h3"))
@@ -52,7 +54,26 @@ export function TableOfContents() {
         })
 
         return () => observer.disconnect()
-    }, [])
+    }, [pathname]) // Re-run when pathname changes
+
+    const handleScroll = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
+        e.preventDefault()
+        const element = document.getElementById(id)
+        if (element) {
+            const offset = 80 // Offset for fixed navbar
+            const elementPosition = element.getBoundingClientRect().top
+            const offsetPosition = elementPosition + window.pageYOffset - offset
+
+            window.scrollTo({
+                top: offsetPosition,
+                behavior: "smooth"
+            })
+
+            // Update URL hash without jumping
+            history.pushState(null, "", `#${id}`)
+            setActiveId(id)
+        }
+    }
 
     if (!items.length) {
         return null
@@ -68,6 +89,7 @@ export function TableOfContents() {
                             <li key={item.id} className="mt-0">
                                 <a
                                     href={`#${item.id}`}
+                                    onClick={(e) => handleScroll(e, item.id)}
                                     className={cn(
                                         "inline-block no-underline transition-colors hover:text-foreground border-l-2 pl-4 -ml-4",
                                         item.level === 3 ? "pl-8" : "",

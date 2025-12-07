@@ -61,3 +61,14 @@
   initial-value: 0deg;
   inherits: false;
 }
+
+/* Custom Selection Color - Premium Docs Feel */
+::selection {
+  background-color: rgb(139 92 246 / 0.2); /* Violet-500 with low opacity */
+  color: inherit;
+}
+
+.dark ::selection {
+  background-color: rgb(139 92 246 / 0.3);
+  color: inherit;
+}

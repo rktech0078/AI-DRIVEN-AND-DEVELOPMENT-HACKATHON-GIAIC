@@ -2,10 +2,11 @@
 
 import Link from "next/link"
 import { motion } from "framer-motion"
-import { ArrowRight, BookOpen, Brain, Component, Cpu, Globe, Layers, Zap } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { ArrowRight, Brain, Component, Cpu, Globe, Layers, Zap } from "lucide-react"
 
-function FeatureCard({ icon: Icon, title, description, delay }: { icon: any, title: string, description: string, delay: number }) {
+type IconComponent = React.ComponentType<{ className?: string }>;
+
+function FeatureCard({ icon: Icon, title, description, delay }: { icon: IconComponent, title: string, description: string, delay: number }) {
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}

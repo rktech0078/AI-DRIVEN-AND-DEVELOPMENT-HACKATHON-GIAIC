@@ -4,6 +4,7 @@ import * as React from 'react'
 import { ThemeProvider as NextThemesProvider } from 'next-themes'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { AiAgentProvider } from '@/contexts/AiAgentContext'
+import { SidebarProvider } from '@/contexts/SidebarContext'
 
 export function Providers({ children }: { children: React.ReactNode }) {
     return (
@@ -14,9 +15,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
             disableTransitionOnChange
         >
             <AuthProvider>
-                <AiAgentProvider>
-                    {children}
-                </AiAgentProvider>
+                <SidebarProvider>
+                    <AiAgentProvider>
+                        {children}
+                    </AiAgentProvider>
+                </SidebarProvider>
             </AuthProvider>
         </NextThemesProvider>
     )

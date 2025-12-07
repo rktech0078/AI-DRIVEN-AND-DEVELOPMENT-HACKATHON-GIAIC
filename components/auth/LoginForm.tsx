@@ -1,9 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
+import { authClient } from '@/lib/auth-client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { Loader2 } from 'lucide-react'
 
 export default function LoginForm() {
     const [email, setEmail] = useState('')
@@ -11,7 +12,6 @@ export default function LoginForm() {
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
 
-    const { signIn } = useAuth()
     const router = useRouter()
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -19,19 +19,37 @@ export default function LoginForm() {
         setError('')
 
         if (!email || !password) {
-            setError('Email aur password dono fill karein')
+            setError('Please fill in both email and password')
             return
         }
 
         setLoading(true)
 
         try {
-            await signIn(email, password)
-            router.push('/')
+            const { error } = await authClient.signIn.email({
+                email,
+                password
+            }, {
+                onRequest: () => {
+                    setLoading(true)
+                },
+                onSuccess: () => {
+                    router.push('/')
+                },
+                onError: (ctx) => {
+                    setError(ctx.error.message || 'An error occurred during login')
+                    setLoading(false)
+                }
+            })
+
+            if (error) {
+                setError(error.message || 'An error occurred during login')
+                setLoading(false)
+            }
+
         } catch (err: unknown) {
-            const errorMessage = err instanceof Error ? err.message : 'Login mein error aya';
+            const errorMessage = err instanceof Error ? err.message : 'An error occurred during login';
             setError(errorMessage);
-        } finally {
             setLoading(false)
         }
     }
@@ -51,7 +69,7 @@ export default function LoginForm() {
                 )}
 
                 <div className="space-y-2">
-                    <label htmlFor="email" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Email</label>
+                    <label htmlFor="email" className="text-sm font-medium leading-none">Email</label>
                     <input
                         id="email"
                         type="email"
@@ -59,12 +77,12 @@ export default function LoginForm() {
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="your@email.com"
                         disabled={loading}
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     />
                 </div>
 
                 <div className="space-y-2">
-                    <label htmlFor="password" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Password</label>
+                    <label htmlFor="password" className="text-sm font-medium leading-none">Password</label>
                     <input
                         id="password"
                         type="password"
@@ -72,7 +90,7 @@ export default function LoginForm() {
                         onChange={(e) => setPassword(e.target.value)}
                         placeholder="••••••••"
                         disabled={loading}
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     />
                 </div>
 
@@ -81,7 +99,12 @@ export default function LoginForm() {
                     className="inline-flex h-10 w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground ring-offset-background transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
                     disabled={loading}
                 >
-                    {loading ? 'Logging in...' : 'Login'}
+                    {loading ? (
+                        <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Logging in...
+                        </>
+                    ) : 'Login'}
                 </button>
 
                 <p className="text-center text-sm text-muted-foreground">

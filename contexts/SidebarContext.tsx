@@ -5,19 +5,22 @@ import React, { createContext, useContext, useState } from "react"
 interface SidebarContextType {
     isCollapsed: boolean
     toggleSidebar: () => void
+    openMobile: boolean
+    setOpenMobile: (open: boolean) => void
 }
 
 const SidebarContext = createContext<SidebarContextType | undefined>(undefined)
 
 export function SidebarProvider({ children }: { children: React.ReactNode }) {
     const [isCollapsed, setIsCollapsed] = useState(false)
+    const [openMobile, setOpenMobile] = useState(false)
 
     const toggleSidebar = () => {
         setIsCollapsed((prev) => !prev)
     }
 
     return (
-        <SidebarContext.Provider value={{ isCollapsed, toggleSidebar }}>
+        <SidebarContext.Provider value={{ isCollapsed, toggleSidebar, openMobile, setOpenMobile }}>
             {children}
         </SidebarContext.Provider>
     )

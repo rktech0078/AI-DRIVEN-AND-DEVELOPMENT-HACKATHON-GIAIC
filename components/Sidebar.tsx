@@ -7,10 +7,11 @@ import { cn } from "@/lib/utils"
 import { AnimatePresence, motion } from "framer-motion"
 import { ChevronRight } from "lucide-react"
 
-// import { docsConfig } from "@/config/docs" 
-// Using inline data for valid compilation if config is not fully populated yet, 
+// import { docsConfig } from "@/config/docs"
+// Using inline data for valid compilation if config is not fully populated yet,
 // but we will import it.
-import { docsConfig, type SidebarNavItem } from "@/config/docs"
+import { docsConfig } from "@/config/docs"
+import { useSidebar } from "@/contexts/SidebarContext"
 
 interface SidebarProps {
     mobile?: boolean
@@ -19,6 +20,7 @@ interface SidebarProps {
 export function Sidebar({ mobile }: SidebarProps) {
     const pathname = usePathname()
     const [openSections, setOpenSections] = useState<Record<string, boolean>>({})
+    const { setOpenMobile } = useSidebar()
 
     const toggleSection = (title: string) => {
         setOpenSections(prev => ({
@@ -27,11 +29,11 @@ export function Sidebar({ mobile }: SidebarProps) {
         }))
     }
 
-    // Initialize all sections as open by default
+    // Initialize only the first section as open by default
     useEffect(() => {
         const initialState: Record<string, boolean> = {}
-        docsConfig.forEach(item => {
-            initialState[item.title] = true
+        docsConfig.forEach((item, index) => {
+            initialState[item.title] = index === 0
         })
         setOpenSections(initialState)
     }, [])
@@ -78,6 +80,7 @@ export function Sidebar({ mobile }: SidebarProps) {
                                                             ? "font-medium text-primary border-primary bg-primary/5"
                                                             : "text-muted-foreground hover:border-border/60"
                                                     )}
+                                                    onClick={() => mobile && setOpenMobile(false)}
                                                 >
                                                     {subItem.title}
                                                 </Link>
@@ -88,8 +91,9 @@ export function Sidebar({ mobile }: SidebarProps) {
                             </AnimatePresence>
                         )}
                     </div>
-                ))}
-            </div>
+                ))
+                }
+            </div >
         )
     }
 

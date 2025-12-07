@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { sendVerificationCode, verifyCode } from '@/lib/supabase'
 
 export default function VerifyEmailForm() {
     const [code, setCode] = useState(['', '', '', '', '', ''])
@@ -10,7 +10,6 @@ export default function VerifyEmailForm() {
     const [loading, setLoading] = useState(false)
     const [success, setSuccess] = useState(false)
 
-    const { verifyEmail, sendCode } = useAuth()
     const router = useRouter()
     const searchParams = useSearchParams()
     const email = searchParams.get('email') || ''
@@ -55,7 +54,7 @@ export default function VerifyEmailForm() {
         setLoading(true)
 
         try {
-            const isValid = await verifyEmail(email, verificationCode)
+            const isValid = await verifyCode(email, verificationCode)
 
             if (isValid) {
                 setSuccess(true)
@@ -80,7 +79,7 @@ export default function VerifyEmailForm() {
         setError('')
 
         try {
-            await sendCode(email)
+            await sendVerificationCode(email)
             alert('Naya code bhej diya gaya hai!')
         } catch {
             setError('Code bhejne mein error aya')

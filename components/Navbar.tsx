@@ -4,18 +4,34 @@ import * as React from "react"
 import Link from "next/link"
 import { Menu, X } from "lucide-react"
 import { ThemeToggle } from "./ThemeToggle"
-import { cn } from "@/lib/utils"
 import { useState } from "react"
 import { UserNav } from "./UserNav"
+import RoboticIcon from "@/components/RoboticIcon"
+import { usePathname } from "next/navigation"
+import { useSidebar } from "@/contexts/SidebarContext"
 
 export function Navbar() {
     const [isOpen, setIsOpen] = useState(false)
+    const pathname = usePathname()
+    const { openMobile, setOpenMobile } = useSidebar()
+    const isDocs = pathname?.startsWith("/docs")
+
+    const handleMobileMenu = () => {
+        if (isDocs) {
+            setOpenMobile(!openMobile)
+        } else {
+            setIsOpen(!isOpen)
+        }
+    }
 
     return (
         <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
             <div className="container flex h-14 max-w-screen-2xl items-center">
                 <div className="mr-4 hidden md:flex">
-                    <Link href="/" className="mr-6 flex items-center space-x-2">
+                    <Link href="/" className="mr-6 flex items-center space-x-2 group">
+                        <div className="text-primary group-hover:scale-110 transition-transform duration-200">
+                            <RoboticIcon />
+                        </div>
                         <span className="hidden font-bold sm:inline-block">
                             Physical AI
                         </span>
@@ -25,7 +41,7 @@ export function Navbar() {
                             href="/docs"
                             className="transition-colors hover:text-foreground/80 text-foreground/60"
                         >
-                            Documentation
+                            The AI Book
                         </Link>
                     </nav>
                 </div>
@@ -33,7 +49,7 @@ export function Navbar() {
                 {/* Mobile Menu Button */}
                 <button
                     className="inline-flex items-center justify-center rounded-md p-2.5 text-gray-700 dark:text-gray-200 md:hidden"
-                    onClick={() => setIsOpen(!isOpen)}
+                    onClick={handleMobileMenu}
                 >
                     <span className="sr-only">Open main menu</span>
                     {isOpen ? (
@@ -85,7 +101,7 @@ export function Navbar() {
                             className="block rounded-md px-3 py-2 text-base font-medium text-foreground hover:bg-accent hover:text-accent-foreground"
                             onClick={() => setIsOpen(false)}
                         >
-                            Documentation
+                            The AI Book
                         </Link>
                     </div>
                 </div>

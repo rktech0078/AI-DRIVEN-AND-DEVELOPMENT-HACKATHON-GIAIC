@@ -1,4 +1,4 @@
-export default {
+const meta = {
     "index": "🏠 Home",
     "section-1": "📚 Section 1: Foundations",
     "section-2": "🤖 Section 2: ROS 2",
@@ -11,3 +11,5 @@ export default {
     "section-9": "📝 Section 9: Projects",
     "section-10": "📖 Section 10: Appendices"
 }
+
+export default meta

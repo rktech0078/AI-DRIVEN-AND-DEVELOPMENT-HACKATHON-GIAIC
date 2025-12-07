@@ -5,10 +5,12 @@ const nextConfig = {
     pageExtensions: ['js', 'jsx', 'md', 'mdx', 'ts', 'tsx'],
 }
 
+import remarkGfm from 'remark-gfm'
 import rehypeSlug from 'rehype-slug'
 
 const withMDX = createMDX({
     options: {
+        remarkPlugins: [remarkGfm],
         rehypePlugins: [rehypeSlug],
     },
 })

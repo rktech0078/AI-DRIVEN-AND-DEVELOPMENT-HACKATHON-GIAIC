@@ -2,6 +2,7 @@ import type { MDXComponents } from 'mdx/types'
 import Link from 'next/link'
 import Image from 'next/image'
 import { cn } from '@/lib/utils'
+import { CodeBlockWithCopy } from '@/components/CodeBlockWithCopy'
 
 export function useMDXComponents(components: MDXComponents): MDXComponents {
   return {
@@ -145,13 +146,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
       />
     ),
     pre: ({ className, ...props }: React.HTMLAttributes<HTMLPreElement>) => (
-      <pre
-        className={cn(
-          "mb-4 mt-6 overflow-x-auto rounded-lg border bg-black py-4 px-4 text-white dark:bg-black",
-          className
-        )}
-        {...props}
-      />
+      <CodeBlockWithCopy className={className} {...props} />
     ),
     code: ({ className, ...props }: React.HTMLAttributes<HTMLElement>) => (
       <code

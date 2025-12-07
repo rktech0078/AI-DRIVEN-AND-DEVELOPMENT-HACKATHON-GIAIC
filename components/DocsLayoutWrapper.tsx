@@ -1,6 +1,6 @@
 "use client"
 
-import { SidebarProvider, useSidebar } from "@/contexts/SidebarContext"
+import { useSidebar } from "@/contexts/SidebarContext"
 import { cn } from "@/lib/utils"
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react"
 import { MobileSidebar } from "@/components/MobileSidebar"
@@ -31,7 +31,7 @@ function DocsLayoutContent({
                 >
                     {/* Render the passed sidebar component */}
                     {/* We need to ensure the width inside doesn't collapse weirdly during transition */}
-                    <div className="w-[220px] lg:w-[240px]">
+                    <div className="w-[220px] lg:w-[240px] h-full">
                         {sidebar}
                     </div>
                 </aside>
@@ -66,8 +66,6 @@ export function DocsLayoutWrapper({
     children: React.ReactNode
 }) {
     return (
-        <SidebarProvider>
-            <DocsLayoutContent sidebar={sidebar}>{children}</DocsLayoutContent>
-        </SidebarProvider>
+        <DocsLayoutContent sidebar={sidebar}>{children}</DocsLayoutContent>
     )
 }

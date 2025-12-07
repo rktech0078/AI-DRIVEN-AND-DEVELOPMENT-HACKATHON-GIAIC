@@ -50,7 +50,7 @@ export default function UserAvatar() {
         )
     }
 
-    const username = user.user_metadata?.username || 'User'
+    const username = user.name || user.email?.split('@')[0] || 'User'
     const email = user.email || ''
     const initials = username.substring(0, 2).toUpperCase()
 

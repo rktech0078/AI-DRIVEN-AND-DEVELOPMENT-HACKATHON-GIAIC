@@ -7,10 +7,6 @@ import { QdrantClient } from '@qdrant/js-client-rest';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 // Initialize Qdrant and Gemini (for embeddings)
-// Note: We initialize these outside the handler to reuse connections if possible, 
-// but in Next.js Edge/Serverless we must be careful with env vars.
-// We'll init strictly needed parts inside or check envs.
-
 const getEmbdeddingModel = () => {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw new Error("GEMINI_API_KEY is missing");
@@ -73,9 +69,6 @@ export async function POST(req: NextRequest) {
     let contextString = "";
     try {
       const embeddingModel = getEmbdeddingModel();
-      // Incorporate selected text into embedding query if it helps, 
-      // but usually we want to find content RELEVANT to the query + selected text.
-      // For now, let's embed the User Query.
       const embeddingResult = await embeddingModel.embedContent(userQuery);
       const vector = embeddingResult.embedding.values;
 
@@ -83,7 +76,7 @@ export async function POST(req: NextRequest) {
       const qdrant = getQdrantClient();
       const searchResults = await qdrant.search('physical_ai_book', {
         vector: vector,
-        limit: 5, // Get top 5 chunks
+        limit: 5,
         with_payload: true
       });
 
@@ -130,8 +123,14 @@ export async function POST(req: NextRequest) {
         });
         selectedModel = model || 'llama-3.2-11b-vision-preview';
         break;
+      case 'mistral':
+        client = new OpenAI({
+          apiKey: process.env.MISTRAL_API_KEY || 'dummy',
+          baseURL: 'https://api.mistral.ai/v1',
+        });
+        selectedModel = model || 'mistral-small-latest';
+        break;
       default:
-        // Default to Gemini if unknown
         client = new OpenAI({
           apiKey: process.env.GEMINI_API_KEY || 'dummy',
           baseURL: 'https://generativelanguage.googleapis.com/v1beta/openai/',
@@ -139,17 +138,8 @@ export async function POST(req: NextRequest) {
         selectedModel = 'gemini-2.0-flash';
     }
 
-    // --- Session Persistence Logic Start ---
+    // --- Session Persistence Logic (Pre-computation) ---
     const cookieStore = cookies();
-
-    // DEBUG: Check Env and Cookies
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-    const urlProjectRef = supabaseUrl.match(/https:\/\/(.*?)\.supabase\.co/)?.[1];
-    const authCookie = cookieStore.getAll().find(c => c.name.startsWith('sb-') && c.name.endsWith('-auth-token'));
-
-    console.log("DEBUG: Env Project Ref:", urlProjectRef);
-    console.log("DEBUG: Found Auth Cookie:", authCookie?.name);
-
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -162,93 +152,52 @@ export async function POST(req: NextRequest) {
       }
     );
 
-    // Check auth using the forwarded cookies
-    let { data: { user }, error: userError } = await supabase.auth.getUser();
+    // Get DB User
+    let { data: { user } } = await supabase.auth.getUser();
 
-    console.log("DEBUG: Auth User ID (initial):", user?.id);
-    if (userError) console.error("DEBUG: Initial Auth Error:", userError);
-
-    // FALLBACK: If user missing but cookie exists, try manual token extraction
+    // Fallback: Check for auth cookie manually if getUser fails
+    const authCookie = cookieStore.getAll().find(c => c.name.startsWith('sb-') && c.name.endsWith('-auth-token'));
     if (!user && authCookie && authCookie.value) {
-      console.log("DEBUG: Attempting manual token extraction from cookie...");
       try {
-        // Cookie value format often: ["access_token","refresh_token",...] (JSON Array) or just JSON object or simple string
-        let token = "";
         const decoded = decodeURIComponent(authCookie.value);
-
-        if (decoded.trim().startsWith('[')) {
-          const json = JSON.parse(decoded);
-          token = json[0]; // Access token is usually first in the array from Auth Helpers
-        } else if (decoded.trim().startsWith('{')) {
-          const json = JSON.parse(decoded);
-          token = json.access_token;
-        } else {
-          // Try assuming it's the token itself or parse failed
-          token = decoded;
-        }
+        let token = "";
+        if (decoded.trim().startsWith('[')) token = JSON.parse(decoded)[0];
+        else if (decoded.trim().startsWith('{')) token = JSON.parse(decoded).access_token;
+        else token = decoded;
 
         if (token) {
-          console.log("DEBUG: Found candidate token, validating...");
-          // Validate token by fetching user
-          const { data: manualUser, error: manualError } = await supabase.auth.getUser(token);
-          if (manualUser?.user) {
-            user = manualUser.user;
-            userError = null; // Clear error as we recovered
-            console.log("DEBUG: Manual token validation SUCCESS! User ID:", user.id);
-          } else {
-            console.error("DEBUG: Manual token validation failed:", manualError);
-          }
-        } else {
-          console.log("DEBUG: Could not parse token from cookie value.");
+          const { data: manualUser } = await supabase.auth.getUser(token);
+          if (manualUser?.user) user = manualUser.user;
         }
       } catch (e) {
-        console.error("DEBUG: Manual cookie parsing exception:", e);
+        console.error("Manual token parse failed", e);
       }
     }
 
-    // Logic to determine session ID
-    let currentSessionId = sessionId || (messages.length > 0 ? messages[messages.length - 1].sessionId : null) || null;
-    console.log("DEBUG: Current Session ID:", currentSessionId);
+    // Determine/Create Session ID
+    let currentSessionId = sessionId || (messages.length > 0 ? messages.find(m => m.sessionId)?.sessionId : null) || null;
 
     if (user) {
-      try {
-        // Create session if it doesn't exist AND we don't have an ID
-        if (!currentSessionId) {
-          console.log("DEBUG: Attempting to create new session...");
-          const { data: newSession, error: sessionError } = await supabase
-            .from('chat_sessions')
-            .insert({
-              user_id: user.id,
-              title: userQuery.substring(0, 50) + '...'
-            })
-            .select('id')
-            .single();
+      if (!currentSessionId) {
+        const { data: newSession } = await supabase
+          .from('chat_sessions')
+          .insert({ user_id: user.id, title: userQuery.substring(0, 50) + '...' })
+          .select('id')
+          .single();
+        if (newSession) currentSessionId = newSession.id;
+      }
 
-          if (sessionError) console.error("DEBUG: Session Create Error:", sessionError);
-
-          if (newSession) {
-            currentSessionId = newSession.id;
-            console.log("DEBUG: Created New Session ID:", currentSessionId);
-          }
-        }
-
-        // Save User Message
-        if (currentSessionId) {
-          console.log("DEBUG: Saving user message...");
-          const { error: msgError } = await supabase.from('chat_messages').insert({
-            session_id: currentSessionId,
-            role: 'user',
-            content: userQuery
-          });
-          if (msgError) console.error("DEBUG: User Msg Save Error:", msgError);
-        }
-      } catch (dbError) {
-        console.error("Error saving user message to DB:", dbError);
+      if (currentSessionId) {
+        // Save User message
+        await supabase.from('chat_messages').insert({
+          session_id: currentSessionId,
+          role: 'user',
+          content: userQuery
+        });
       }
     }
-    // --- Session Persistence Logic End ---
 
-    // 5. Chat Completion
+    // 5. Chat Completion with STREAMING
     const response = await client.chat.completions.create({
       model: selectedModel,
       messages: [
@@ -259,26 +208,66 @@ export async function POST(req: NextRequest) {
         }))
       ],
       temperature: 0.3,
+      stream: true, // ENABLE STREAMING
     });
 
-    const reply = response.choices[0]?.message?.content || "Sorry, I couldn't generate a response.";
+    // Create a TransformStream to pass through data AND accumulate it
+    const encoder = new TextEncoder();
 
-    // --- Save Assistant Response ---
-    if (user && currentSessionId) {
-      try {
-        console.log("DEBUG: Saving assistant message...");
-        const { error: replyError } = await supabase.from('chat_messages').insert({
-          session_id: currentSessionId,
-          role: 'assistant',
-          content: reply
-        });
-        if (replyError) console.error("DEBUG: Assistant Msg Save Error:", replyError);
-      } catch (dbError) {
-        console.error("Error saving assistant message to DB:", dbError);
+    let accumulatedReply = "";
+
+    const stream = new ReadableStream({
+      async start(controller) {
+        try {
+          // Send the Session ID as the first chunk (special format)
+          // We'll use a delimiter like "||SESSION_ID:..." or just a custom header/prefix if possible.
+          // EASIER: Send it as a JSON chunk if the client expects it, OR just rely on the client knowing the session ID if it sent it.
+          // If it's a NEW session, the client needs to know.
+          // Standard Approach: Return SessionID in a header? Headers are already sent.
+          // We'll prepend it to the stream with a unique separator if strictly needed, 
+          // BUT for now, let's assume the client handles the "new session" case by re-fetching or we just accept 
+          // that the first message might not update the URL bar immediately until a reload/navigation.
+          // BETTER: Send valid JSON chunks? No, that breaks simple text streaming.
+          // Let's stick to text streaming. We'll send the session ID in a custom header `X-Session-Id`.
+
+          // Note: Headers are read-only on NextResponse usually, but we can set them on init.
+
+          for await (const chunk of response) {
+            const content = chunk.choices[0]?.delta?.content || "";
+            if (content) {
+              accumulatedReply += content;
+              controller.enqueue(encoder.encode(content));
+            }
+          }
+        } catch (err) {
+          console.error("Streaming Error", err);
+          controller.error(err);
+        } finally {
+          controller.close();
+
+          // SAVE TO DB AFTER STREAM CLOSES
+          if (user && currentSessionId && accumulatedReply) {
+            try {
+              console.log("Saving accumulated response to DB...");
+              await supabase.from('chat_messages').insert({
+                session_id: currentSessionId,
+                role: 'assistant',
+                content: accumulatedReply
+              });
+            } catch (e) {
+              console.error("Failed to save completion to DB", e);
+            }
+          }
+        }
       }
-    }
+    });
 
-    return NextResponse.json({ reply, sessionId: currentSessionId });
+    return new NextResponse(stream, {
+      headers: {
+        'Content-Type': 'text/plain; charset=utf-8',
+        'X-Session-Id': currentSessionId || '',
+      }
+    });
 
   } catch (error: unknown) {
     console.error('Error in AI Agent API:', error);

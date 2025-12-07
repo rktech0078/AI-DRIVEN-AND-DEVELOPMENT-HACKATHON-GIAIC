@@ -9,6 +9,7 @@ import { UserNav } from "./UserNav"
 import RoboticIcon from "@/components/RoboticIcon"
 import { usePathname } from "next/navigation"
 import { useSidebar } from "@/contexts/SidebarContext"
+import { SearchDialog } from "./SearchDialog"
 
 export function Navbar() {
     const [isOpen, setIsOpen] = useState(false)
@@ -61,11 +62,11 @@ export function Navbar() {
 
                 <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
                     <div className="w-full flex-1 md:w-auto md:flex-none">
-                        {/* Search Placeholder - can add functionality later */}
+                        <SearchDialog />
                     </div>
                     <nav className="flex items-center gap-2">
                         <Link
-                            href="https://github.com/panaversity/physical-ai-hackathon"
+                            href="https://github.com/rktech0078/AI-DRIVEN-AND-DEVELOPMENT-HACKATHON-GIAIC"
                             target="_blank"
                             className="hidden md:inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-9 py-2 w-9 px-0"
                         >

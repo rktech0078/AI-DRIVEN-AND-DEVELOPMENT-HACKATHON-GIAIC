@@ -1,6 +1,6 @@
 'use client'
 
-export default function RoboticIcon() {
+export default function RoboticIcon(props: React.SVGProps<SVGSVGElement>) {
     return (
         <svg
             width="32"
@@ -11,7 +11,7 @@ export default function RoboticIcon() {
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
-            className="robotic-icon"
+            {...props}
         >
             <rect x="5" y="2" width="14" height="8" rx="2" />
             <rect x="9" y="10" width="6" height="12" rx="1" />

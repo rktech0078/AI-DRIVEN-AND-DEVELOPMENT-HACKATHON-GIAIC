@@ -60,7 +60,7 @@ export default function Home() {
                             Start Learning <ArrowRight className="ml-2 h-4 w-4" />
                         </Link>
                         <Link
-                            href="https://github.com/panaversity/physical-ai-hackathon"
+                            href="https://github.com/rktech0078/AI-DRIVEN-AND-DEVELOPMENT-HACKATHON-GIAIC"
                             target="_blank"
                             className="inline-flex items-center justify-center rounded-lg border border-border bg-background px-8 py-3 text-sm font-medium transition-all hover:bg-muted hover:text-foreground"
                         >

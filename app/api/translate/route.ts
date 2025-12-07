@@ -27,6 +27,12 @@ const PROVIDERS: Record<string, ProviderConfig> = {
         baseURL: 'https://openrouter.ai/api/v1',
         apiKey: process.env.OPENROUTER_API_KEY || '',
         defaultModel: 'nvidia/nemotron-nano-9b-v2:free',
+    },
+    mistral: {
+        name: 'Mistral',
+        baseURL: 'https://api.mistral.ai/v1',
+        apiKey: process.env.MISTRAL_API_KEY || '',
+        defaultModel: 'mistral-small-latest',
     }
 };
 
@@ -88,7 +94,7 @@ export async function POST(req: NextRequest) {
         }
 
         // 2. Fallback Loop (Agentic Handoff)
-        const fallbackOrder = ['gemini', 'groq', 'openrouter'].filter(p => p !== provider);
+        const fallbackOrder = ['gemini', 'groq', 'openrouter', 'mistral'].filter(p => p !== provider);
 
         for (const backupProvider of fallbackOrder) {
             try {

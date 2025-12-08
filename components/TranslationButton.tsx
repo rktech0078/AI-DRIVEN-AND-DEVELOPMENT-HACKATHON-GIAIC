@@ -1,13 +1,14 @@
-
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { Languages, Loader2, Settings2, RefreshCw, Check, Bot } from 'lucide-react';
+import { Languages, Loader2, Settings2, RefreshCw, Check, Bot, X } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useMediaQuery } from '@/hooks/use-media-query';
 
 const MODELS: Record<string, string[]> = {
     mistral: ['mistral-large-latest', 'mistral-medium', 'mistral-small-latest', 'codestral-latest'],
@@ -23,9 +24,12 @@ export default function TranslationButton() {
     const [provider, setProvider] = useState<string>('gemini');
     const [model, setModel] = useState<string>(MODELS['gemini'][0]);
     const [showSettings, setShowSettings] = useState(false);
+    const isDesktop = useMediaQuery("(min-width: 768px)");
+    const [mounted, setMounted] = useState(false);
+    const settingsRef = useRef<HTMLDivElement>(null);
 
-    // Load translated content from cache on mount if available
     useEffect(() => {
+        setMounted(true);
         if (typeof window !== 'undefined') {
             const cacheKey = `translation_cache_${window.location.pathname}`;
             const cached = localStorage.getItem(cacheKey);
@@ -35,7 +39,20 @@ export default function TranslationButton() {
         }
     }, []);
 
-    // Reset model when provider changes
+    // Close settings when clicking outside on desktop
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (settingsRef.current && !settingsRef.current.contains(event.target as Node)) {
+                setShowSettings(false);
+            }
+        };
+
+        if (showSettings && isDesktop) {
+            document.addEventListener('mousedown', handleClickOutside);
+            return () => document.removeEventListener('mousedown', handleClickOutside);
+        }
+    }, [showSettings, isDesktop]);
+
     const handleProviderChange = (newProvider: string) => {
         setProvider(newProvider);
         if (MODELS[newProvider]) {
@@ -44,7 +61,6 @@ export default function TranslationButton() {
     };
 
     const handleTranslate = async () => {
-        // Check cache again just in case (though effect handles init)
         const cacheKey = `translation_cache_${window.location.pathname}`;
         const cached = localStorage.getItem(cacheKey);
 
@@ -61,9 +77,6 @@ export default function TranslationButton() {
 
         setIsLoading(true);
         try {
-            // Clone the element to avoid modifying the actual DOM during extraction if needed
-            // For now, innerText is fine but might include the button text itself. 
-            // Better to exclude the button container.
             const clone = contentElement.cloneNode(true) as HTMLElement;
             const btnContainer = clone.querySelector('.translation-btn-container');
             if (btnContainer) btnContainer.remove();
@@ -80,13 +93,7 @@ export default function TranslationButton() {
 
             const data = await res.json();
             setTranslatedContent(data.translation);
-
-            // Save to cache
             localStorage.setItem(cacheKey, data.translation);
-
-            if (data.note) {
-                console.info(data.note); // Log fallback info
-            }
 
         } catch (error) {
             console.error(error);
@@ -98,103 +105,155 @@ export default function TranslationButton() {
 
     if (!user) return null;
 
-    return (
-        <div className="mb-6 relative group z-20">
-            <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                    <button
-                        onClick={translatedContent ? () => setTranslatedContent(null) : handleTranslate}
-                        disabled={isLoading}
-                        className={cn(
-                            "relative flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 shadow-sm border",
-                            translatedContent
-                                ? "bg-muted text-foreground border-border hover:bg-muted/80"
-                                : "bg-gradient-to-r from-emerald-500/10 to-emerald-600/10 text-emerald-600 border-emerald-200/50 hover:border-emerald-300 dark:border-emerald-500/20 dark:text-emerald-400"
-                        )}
-                    >
-                        {isLoading ? (
-                            <>
-                                <Loader2 size={16} className="animate-spin" />
-                                <span>Translating with {provider}...</span>
-                            </>
-                        ) : translatedContent ? (
-                            <>
-                                <Languages size={16} />
-                                <span>Show Original</span>
-                            </>
-                        ) : (
-                            <>
-                                <div className="absolute inset-0 bg-emerald-500/5 rounded-xl animate-pulse" />
-                                <Bot size={16} className="text-emerald-500" />
-                                <span>Translate to Urdu</span>
-                                <span className="bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-[10px] px-1.5 py-0.5 rounded-full font-bold ml-1 border border-emerald-200 dark:border-emerald-500/30">
-                                    +50 PTS
-                                </span>
-                            </>
-                        )}
-                    </button>
-
-                    <div className="relative">
+    const SettingsContent = () => (
+        <div className="space-y-6">
+            {/* Provider Selection */}
+            <div className="space-y-3">
+                <div className="text-xs font-semibold text-zinc-500 uppercase tracking-wider px-1">AI Provider</div>
+                <div className="grid grid-cols-1 gap-2">
+                    {Object.keys(MODELS).map((p) => (
                         <button
-                            onClick={() => setShowSettings(!showSettings)}
+                            key={p}
+                            onClick={() => handleProviderChange(p)}
                             className={cn(
-                                "p-2 rounded-lg transition-colors border border-transparent",
-                                showSettings ? "bg-muted border-border text-foreground" : "hover:bg-muted/80 text-muted-foreground"
+                                "w-full text-left px-3 py-2 text-sm rounded-lg capitalize transition-colors flex items-center justify-between border",
+                                provider === p
+                                    ? "bg-zinc-900 dark:bg-zinc-100 text-zinc-100 dark:text-zinc-900 border-zinc-900 dark:border-zinc-100 font-medium"
+                                    : "bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800"
                             )}
-                            title="Translation Settings"
                         >
-                            <Settings2 size={16} />
+                            {p}
+                            {provider === p && <Check size={14} />}
                         </button>
-
-                        {showSettings && (
-                            <div className="absolute top-full left-0 mt-2 w-64 bg-card border border-border rounded-xl shadow-lg p-3 z-50 animate-in fade-in zoom-in-95 duration-200">
-                                <div className="space-y-4">
-                                    {/* Provider Selection */}
-                                    <div className="space-y-1.5">
-                                        <div className="text-xs font-semibold text-muted-foreground px-1 uppercase tracking-wider">Provider</div>
-                                        <div className="grid grid-cols-1 gap-1">
-                                            {Object.keys(MODELS).map((p) => (
-                                                <button
-                                                    key={p}
-                                                    onClick={() => handleProviderChange(p)}
-                                                    className={cn(
-                                                        "w-full text-left px-2 py-1.5 text-sm rounded-lg capitalize transition-colors flex items-center justify-between",
-                                                        provider === p ? "bg-primary/10 text-primary font-medium" : "hover:bg-muted text-foreground"
-                                                    )}
-                                                >
-                                                    {p}
-                                                    {provider === p && <Check size={14} />}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    {/* Model Selection */}
-                                    <div className="space-y-1.5">
-                                        <div className="text-xs font-semibold text-muted-foreground px-1 uppercase tracking-wider">Model</div>
-                                        <div className="grid grid-cols-1 gap-1 max-h-40 overflow-y-auto pr-1">
-                                            {MODELS[provider]?.map((m) => (
-                                                <button
-                                                    key={m}
-                                                    onClick={() => setModel(m)}
-                                                    className={cn(
-                                                        "w-full text-left px-2 py-1.5 text-xs rounded-lg transition-colors flex items-center justify-between truncate",
-                                                        model === m ? "bg-primary/10 text-primary font-medium" : "hover:bg-muted text-foreground"
-                                                    )}
-                                                    title={m}
-                                                >
-                                                    <span className="truncate">{m.split('/').pop()?.split(':')[0] || m}</span>
-                                                    {model === m && <Check size={12} />}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-                    </div>
+                    ))}
                 </div>
             </div>
+
+            {/* Model Selection */}
+            <div className="space-y-3">
+                <div className="text-xs font-semibold text-zinc-500 uppercase tracking-wider px-1">Model</div>
+                <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto pr-1">
+                    {MODELS[provider]?.map((m) => (
+                        <button
+                            key={m}
+                            onClick={() => setModel(m)}
+                            className={cn(
+                                "w-full text-left px-3 py-2 text-xs rounded-lg transition-colors flex items-center justify-between border truncate",
+                                model === m
+                                    ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border-zinc-200 dark:border-zinc-700 font-medium"
+                                    : "border-transparent text-zinc-500 hover:bg-zinc-50 dark:hover:bg-zinc-800"
+                            )}
+                        >
+                            <span className="truncate">{m.split('/').pop()?.split(':')[0] || m}</span>
+                            {model === m && <Check size={12} />}
+                        </button>
+                    ))}
+                </div>
+            </div>
+        </div>
+    );
+
+    return (
+        <div className="mb-6 relative z-20">
+            <div className="flex items-center gap-3 mb-4" ref={settingsRef}>
+                <button
+                    onClick={translatedContent ? () => setTranslatedContent(null) : handleTranslate}
+                    disabled={isLoading}
+                    className={cn(
+                        "relative flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-200 shadow-sm hover:shadow-md active:scale-95",
+                        translatedContent
+                            ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 hover:bg-zinc-200 dark:hover:bg-zinc-700"
+                            : "bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 hover:bg-zinc-800 dark:hover:bg-zinc-200"
+                    )}
+                >
+                    {isLoading ? (
+                        <>
+                            <Loader2 size={16} className="animate-spin" />
+                            <span>Translating...</span>
+                        </>
+                    ) : translatedContent ? (
+                        <>
+                            <Languages size={16} />
+                            <span>Show Original</span>
+                        </>
+                    ) : (
+                        <>
+                            <Bot size={18} />
+                            <span>Translate to Urdu</span>
+                            {/* <span className="bg-white/20 dark:bg-black/10 text-[10px] px-1.5 py-0.5 rounded-full font-bold ml-1">
+                                +50 PTS
+                            </span> */}
+                        </>
+                    )}
+                </button>
+
+                <button
+                    onClick={() => setShowSettings(!showSettings)}
+                    className={cn(
+                        "p-2.5 rounded-full border transition-all duration-200 bg-white dark:bg-zinc-950",
+                        showSettings
+                            ? "border-zinc-300 dark:border-zinc-600 bg-zinc-100 dark:bg-zinc-900"
+                            : "border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100"
+                    )}
+                    aria-label="Translation Settings"
+                >
+                    <Settings2 size={18} />
+                </button>
+
+                {/* Desktop Dropdown */}
+                <AnimatePresence>
+                    {showSettings && isDesktop && (
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                            className="absolute top-full left-0 mt-3 w-72 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-xl p-4 z-50"
+                        >
+                            <SettingsContent />
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </div>
+
+            {/* Mobile Drawer (Portal) */}
+            {mounted && !isDesktop && createPortal(
+                <AnimatePresence>
+                    {showSettings && (
+                        <>
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                onClick={() => setShowSettings(false)}
+                                className="fixed inset-0 z-[110] bg-black/40 backdrop-blur-sm"
+                            />
+                            <motion.div
+                                initial={{ y: "100%" }}
+                                animate={{ y: 0 }}
+                                exit={{ y: "100%" }}
+                                transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                                className="fixed inset-x-0 bottom-0 z-[120] bg-white dark:bg-zinc-900 rounded-t-3xl border-t border-zinc-200 dark:border-zinc-800 shadow-2xl flex flex-col max-h-[85vh] safe-area-bottom"
+                            >
+                                <div className="w-12 h-1.5 bg-zinc-300 dark:bg-zinc-700 rounded-full mx-auto my-3 shrink-0" />
+
+                                <div className="px-6 pb-6 pt-2 overflow-y-auto">
+                                    <div className="flex items-center justify-between mb-6">
+                                        <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">AI Models</h3>
+                                        <button
+                                            onClick={() => setShowSettings(false)}
+                                            className="p-2 bg-zinc-100 dark:bg-zinc-800 rounded-full text-zinc-500"
+                                        >
+                                            <X size={20} />
+                                        </button>
+                                    </div>
+                                    <SettingsContent />
+                                </div>
+                            </motion.div>
+                        </>
+                    )}
+                </AnimatePresence>,
+                document.body
+            )}
 
             <AnimatePresence>
                 {translatedContent && (
@@ -202,14 +261,16 @@ export default function TranslationButton() {
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
                         exit={{ opacity: 0, height: 0 }}
-                        className="bg-muted/30 border border-border/50 rounded-2xl p-6 prose prose-sm dark:prose-invert max-w-none shadow-inner"
+                        className="bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 sm:p-8 prose prose-slate dark:prose-invert max-w-none mt-6"
                         id="urdu-translation-container"
                         dir="auto"
                     >
-                        <div className="flex items-center justify-between mb-4">
-                            <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-semibold text-xs uppercase tracking-wider">
-                                <Languages size={14} />
-                                Urdu Translation (AI Generated)
+                        <div className="flex items-center justify-between mb-8 border-b border-zinc-200 dark:border-zinc-800 pb-4">
+                            <div className="flex items-center gap-2.5 text-zinc-900 dark:text-zinc-100 font-medium">
+                                <div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-xl">
+                                    <Languages size={18} />
+                                </div>
+                                <span>Urdu Translation</span>
                             </div>
                             <button
                                 onClick={() => {
@@ -217,21 +278,20 @@ export default function TranslationButton() {
                                     setTranslatedContent(null);
                                     handleTranslate();
                                 }}
-                                className="text-[10px] text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
-                                title="Regenerate Translation"
+                                className="text-xs font-medium text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 flex items-center gap-1.5 transition-colors bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 px-3 py-1.5 rounded-lg"
                             >
-                                <RefreshCw size={12} />
-                                Regenerate with {model}
+                                <RefreshCw size={14} />
+                                Regenerate
                             </button>
                         </div>
                         <ReactMarkdown
                             remarkPlugins={[remarkGfm]}
                             components={{
-                                p: ({ ...props }) => <p className="leading-relaxed mb-4 text-right" style={{ fontFamily: 'Noto Nastaliq Urdu, serif' }} {...props} />,
-                                li: ({ ...props }) => <li className="text-right" style={{ fontFamily: 'Noto Nastaliq Urdu, serif' }} {...props} />,
-                                h1: ({ ...props }) => <h1 className="text-right font-bold mt-6 mb-4" {...props} />,
-                                h2: ({ ...props }) => <h2 className="text-right font-bold mt-5 mb-3" {...props} />,
-                                h3: ({ ...props }) => <h3 className="text-right font-bold mt-4 mb-2" {...props} />,
+                                p: ({ ...props }) => <p className="leading-relaxed mb-6 text-right text-lg text-zinc-700 dark:text-zinc-300" style={{ fontFamily: 'Noto Nastaliq Urdu, serif', lineHeight: '2' }} {...props} />,
+                                li: ({ ...props }) => <li className="text-right text-lg text-zinc-700 dark:text-zinc-300 mb-2" style={{ fontFamily: 'Noto Nastaliq Urdu, serif' }} {...props} />,
+                                h1: ({ ...props }) => <h1 className="text-right font-bold mt-8 mb-6 text-3xl" {...props} />,
+                                h2: ({ ...props }) => <h2 className="text-right font-bold mt-8 mb-5 text-2xl" {...props} />,
+                                h3: ({ ...props }) => <h3 className="text-right font-bold mt-6 mb-4 text-xl" {...props} />,
                             }}
                         >
                             {translatedContent}

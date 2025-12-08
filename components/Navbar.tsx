@@ -60,11 +60,11 @@ export function Navbar() {
                     )}
                 </button>
 
-                <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
-                    <div className="w-full flex-1 md:w-auto md:flex-none">
+                <div className="flex flex-1 items-center justify-between gap-2 md:justify-end">
+                    <div className="w-full max-w-xl md:w-auto md:flex-none">
                         <SearchDialog />
                     </div>
-                    <nav className="flex items-center gap-2">
+                    <nav className="flex items-center gap-1.5 sm:gap-2">
                         <Link
                             href="https://github.com/rktech0078/AI-DRIVEN-AND-DEVELOPMENT-HACKATHON-GIAIC"
                             target="_blank"

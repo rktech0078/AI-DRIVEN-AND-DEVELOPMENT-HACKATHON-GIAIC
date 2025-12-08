@@ -56,7 +56,7 @@ export function MobileSidebar() {
                                         The AI Book
                                     </Link>
                                     <Link
-                                        href="https://github.com/panaversity/physical-ai-hackathon"
+                                        href="https://github.com/rktech0078/AI-DRIVEN-AND-DEVELOPMENT-HACKATHON-GIAIC"
                                         target="_blank"
                                         className="text-sm font-medium hover:text-primary py-2"
                                         onClick={() => setOpenMobile(false)}

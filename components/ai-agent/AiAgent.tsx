@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import {
-    X, Sparkles, ChevronDown, Bot, Copy,
+    X, Sparkles, Bot, Copy,
     ThumbsUp, Check, Square, ArrowUp, Zap, Layers
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -12,11 +12,13 @@ import remarkGfm from 'remark-gfm';
 import { createBrowserClient } from '@supabase/auth-helpers-nextjs';
 import { useAiAgent } from '@/contexts/AiAgentContext';
 import RoboticIcon from '@/components/RoboticIcon';
+import { ModelSelector } from '@/components/ai-agent/ModelSelector';
 
 type Message = {
     role: 'user' | 'assistant' | 'system';
     content: string;
     id?: string;
+    model?: string;
 };
 
 type Provider = 'gemini' | 'openrouter' | 'groq' | 'mistral';
@@ -38,14 +40,21 @@ export default function AiAgent() {
 
     const [provider, setProvider] = useState<Provider>('gemini');
     const [model, setModel] = useState<string>(MODELS.gemini[0]);
+    const [thinkingMessage, setThinkingMessage] = useState<string>('');
+    const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
-    const [isProviderOpen, setIsProviderOpen] = useState(false);
-    const [isModelOpen, setIsModelOpen] = useState(false);
-    const providerRef = useRef<HTMLDivElement>(null);
-    const modelRef = useRef<HTMLDivElement>(null);
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-    const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+    useEffect(() => {
+        if (textareaRef.current) {
+            textareaRef.current.style.height = 'auto';
+            textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px';
+        }
+    }, [input]);
+
+
+
 
     const [sessionId, setSessionId] = useState<string | null>(null);
     const supabase = createBrowserClient(
@@ -94,14 +103,7 @@ export default function AiAgent() {
         scrollToBottom();
     }, [messages, isOpen]);
 
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (providerRef.current && !providerRef.current.contains(event.target as Node)) setIsProviderOpen(false);
-            if (modelRef.current && !modelRef.current.contains(event.target as Node)) setIsModelOpen(false);
-        };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
+
 
     const [selectionButtonPos, setSelectionButtonPos] = useState<{ x: number, y: number } | null>(null);
 
@@ -150,6 +152,7 @@ export default function AiAgent() {
             abortControllerRef.current.abort();
             abortControllerRef.current = null;
             setIsLoading(false);
+            setThinkingMessage('');
         }
     };
 
@@ -162,25 +165,57 @@ export default function AiAgent() {
         setMessages(currentMessages);
         setInput('');
         setIsLoading(true);
+        setThinkingMessage('');
 
         const abortController = new AbortController();
         abortControllerRef.current = abortController;
 
-        try {
-            const response = await fetch('/api/agent', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    messages: currentMessages,
-                    provider,
-                    model,
-                    selectedText,
-                    sessionId
-                }),
-                signal: abortController.signal,
-            });
+        const providersList: Provider[] = [
+            provider, // First try selected
+            'gemini',
+            'groq',
+            'openrouter',
+            'mistral'
+        ].filter((p, index, self) => self.indexOf(p) === index) as Provider[]; // Dedupe
 
-            if (!response.ok) throw new Error(response.statusText);
+        try {
+            let response: Response | null = null;
+            let employedProvider = provider;
+
+            for (const currentProvider of providersList) {
+                try {
+                    if (currentProvider !== provider) {
+                        setThinkingMessage(`Thinking... (Switching to ${currentProvider}...)`);
+                    }
+
+                    const currentModel = currentProvider === provider ? model : MODELS[currentProvider][0];
+
+                    const attemptResponse = await fetch('/api/agent', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            messages: currentMessages,
+                            provider: currentProvider,
+                            model: currentModel,
+                            selectedText,
+                            sessionId
+                        }),
+                        signal: abortController.signal,
+                    });
+
+                    if (!attemptResponse.ok) throw new Error(attemptResponse.statusText);
+
+                    response = attemptResponse;
+                    employedProvider = currentProvider;
+                    break; // Success
+                } catch (err: unknown) {
+                    if (err instanceof Error && err.name === 'AbortError') throw err;
+                    console.warn(`Provider ${currentProvider} failed, trying next...`);
+                    continue;
+                }
+            }
+
+            if (!response) throw new Error("All providers failed to generate a response.");
 
             const newSessionId = response.headers.get('X-Session-Id');
             if (newSessionId && !sessionId) {
@@ -193,7 +228,18 @@ export default function AiAgent() {
             if (!reader) throw new Error("No reader available");
 
             const assistantMsgId = `ai-${Date.now()}`;
-            setMessages(prev => [...prev, { role: 'assistant', content: '', id: assistantMsgId }]);
+            setMessages(prev => [...prev, {
+                role: 'assistant',
+                content: '',
+                id: assistantMsgId,
+                model: employedProvider
+            }]);
+
+            // Clear thinking message once streaming starts/found
+            if (employedProvider !== provider) {
+                // Keep showing briefly or clear? Let's clear to show the answer.
+                setThinkingMessage('');
+            }
 
             let accumulatedText = "";
 
@@ -221,10 +267,11 @@ export default function AiAgent() {
                 console.log("Generation stopped by user");
             } else {
                 console.error("Chat error:", error);
-                setMessages(prev => [...prev, { role: 'assistant', content: 'Sorry, something went wrong. Please try again.', id: `err-${Date.now()}` }]);
+                setMessages(prev => [...prev, { role: 'assistant', content: 'Sorry, I am having trouble connecting to the AI models right now. Please try again later.', id: `err-${Date.now()}` }]);
             }
         } finally {
             setIsLoading(false);
+            setThinkingMessage('');
             abortControllerRef.current = null;
         }
     };
@@ -248,8 +295,8 @@ export default function AiAgent() {
                         onClick={handleFloatingButtonClick}
                         className="fixed z-[60] flex items-center gap-2 px-3 py-2 bg-zinc-900 text-white text-xs font-medium rounded-lg shadow-lg dark:bg-zinc-50 dark:text-zinc-900 border border-zinc-200 dark:border-zinc-800"
                         style={{
-                            top: selectionButtonPos.y,
-                            left: selectionButtonPos.x,
+                            top: selectionButtonPos?.y,
+                            left: selectionButtonPos?.x,
                             transform: 'translateX(-50%)'
                         }}
                     >
@@ -311,90 +358,24 @@ export default function AiAgent() {
 
                                 <div className="flex items-center gap-2">
                                     {/* Dynamic Provider Selector */}
-                                    <div className="relative" ref={providerRef}>
-                                        <motion.button
-                                            whileTap={{ scale: 0.95 }}
-                                            onClick={() => setIsProviderOpen(!isProviderOpen)}
-                                            className={cn(
-                                                "h-8 px-3 rounded-lg transition-all text-xs font-medium flex items-center gap-2 border",
-                                                isProviderOpen
-                                                    ? "bg-zinc-100 dark:bg-zinc-800 border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100"
-                                                    : "bg-white dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-900"
-                                            )}
-                                        >
-                                            <Zap size={12} className={cn("transition-colors", provider === 'gemini' ? "text-blue-500" : provider === 'groq' ? "text-orange-500" : "text-purple-500")} />
-                                            <span className="hidden xs:inline">{provider === 'openrouter' ? 'OpenRouter' : provider.charAt(0).toUpperCase() + provider.slice(1)}</span>
-                                            <ChevronDown size={12} className={cn("transition-transform duration-200", isProviderOpen && "rotate-180")} />
-                                        </motion.button>
-                                        <AnimatePresence>
-                                            {isProviderOpen && (
-                                                <motion.div
-                                                    initial={{ opacity: 0, scale: 0.95, y: 5 }}
-                                                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                                                    exit={{ opacity: 0, scale: 0.95, y: 5 }}
-                                                    className="absolute top-full right-0 mt-2 w-48 max-w-[calc(100vw-32px)] bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-xl p-1.5 z-50 max-h-[300px] overflow-y-auto"
-                                                >
-                                                    <span className="text-[10px] font-bold text-zinc-400 px-2 py-1 block uppercase tracking-wider">Provider</span>
-                                                    {([ 'mistral', 'gemini', 'groq', 'openrouter'] as const).map(p => (
-                                                        <button
-                                                            key={p}
-                                                            onClick={() => { setProvider(p); setModel(MODELS[p][0]); setIsProviderOpen(false); }}
-                                                            className={cn(
-                                                                "w-full text-left px-3 py-2 text-xs rounded-lg transition-colors flex items-center justify-between group",
-                                                                provider === p ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white font-medium" : "text-zinc-500 hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
-                                                            )}
-                                                        >
-                                                            {p.charAt(0).toUpperCase() + p.slice(1)}
-                                                            {provider === p && <Check size={12} className="text-zinc-900 dark:text-zinc-100" />}
-                                                        </button>
-                                                    ))}
-                                                </motion.div>
-                                            )}
-                                        </AnimatePresence>
-                                    </div>
+                                    <ModelSelector
+                                        label="Select Provider"
+                                        value={provider}
+                                        options={['gemini', 'openrouter', 'groq', 'mistral']}
+                                        onChange={(val) => {
+                                            setProvider(val as Provider);
+                                            setModel(MODELS[val as Provider][0]);
+                                        }}
+                                        icon={<Zap size={12} className={cn("transition-colors", provider === 'gemini' ? "text-blue-500" : provider === 'groq' ? "text-orange-500" : "text-purple-500")} />}
+                                    />
 
-                                    {/* Dynamic Model Selector */}
-                                    <div className="relative" ref={modelRef}>
-                                        <motion.button
-                                            whileTap={{ scale: 0.95 }}
-                                            onClick={() => setIsModelOpen(!isModelOpen)}
-                                            className={cn(
-                                                "h-8 px-3 rounded-lg transition-all text-xs font-medium flex items-center gap-2 border max-w-[160px]",
-                                                isModelOpen
-                                                    ? "bg-zinc-100 dark:bg-zinc-800 border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100"
-                                                    : "bg-white dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-900"
-                                            )}
-                                        >
-                                            <Layers size={12} />
-                                            <span className="truncate">{model}</span>
-                                            <ChevronDown size={12} className={cn("shrink-0 transition-transform duration-200", isModelOpen && "rotate-180")} />
-                                        </motion.button>
-                                        <AnimatePresence>
-                                            {isModelOpen && (
-                                                <motion.div
-                                                    initial={{ opacity: 0, scale: 0.95, y: 5 }}
-                                                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                                                    exit={{ opacity: 0, scale: 0.95, y: 5 }}
-                                                    className="absolute top-full right-0 mt-2 w-64 max-w-[calc(100vw-32px)] bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-xl p-1.5 z-50 max-h-[300px] overflow-y-auto"
-                                                >
-                                                    <span className="text-[10px] font-bold text-zinc-400 px-2 py-1 block uppercase tracking-wider">Available Models</span>
-                                                    {MODELS[provider].map(m => (
-                                                        <button
-                                                            key={m}
-                                                            onClick={() => { setModel(m); setIsModelOpen(false); }}
-                                                            className={cn(
-                                                                "w-full text-left px-3 py-2 text-xs rounded-lg transition-colors flex items-center justify-between",
-                                                                model === m ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white font-medium" : "text-zinc-500 hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
-                                                            )}
-                                                        >
-                                                            <div className="truncate mr-2 flex-1">{m}</div>
-                                                            {model === m && <Check size={12} className="text-zinc-900 dark:text-zinc-100 shrink-0" />}
-                                                        </button>
-                                                    ))}
-                                                </motion.div>
-                                            )}
-                                        </AnimatePresence>
-                                    </div>
+                                    <ModelSelector
+                                        label="Select Model"
+                                        value={model}
+                                        options={MODELS[provider]}
+                                        onChange={setModel}
+                                        icon={<Layers size={12} />}
+                                    />
 
                                     <button
                                         onClick={() => setIsOpen(false)}
@@ -494,6 +475,12 @@ export default function AiAgent() {
                                                     {/* Actions Footer */}
                                                     {msg.role === 'assistant' && !isLoading && (
                                                         <div className="flex items-center gap-3 pt-1">
+                                                            {msg.model && (
+                                                                <span className="text-[10px] font-medium text-zinc-400 uppercase tracking-wider bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded">
+                                                                    {msg.model}
+                                                                </span>
+                                                            )}
+                                                            <div className="h-3 w-[1px] bg-zinc-200 dark:bg-zinc-800 mx-1" />
                                                             <button onClick={() => copyToClipboard(msg.content, idx)} className="text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors">
                                                                 {copiedIndex === idx ? <Check size={14} /> : <Copy size={14} />}
                                                             </button>
@@ -508,10 +495,15 @@ export default function AiAgent() {
                                         {isLoading && (
                                             <div className="flex gap-4">
                                                 <RoboticIcon className="w-6 h-6 text-zinc-900 dark:text-zinc-100 shrink-0" />
-                                                <div className="flex items-center gap-1 h-6">
-                                                    <div className="w-1.5 h-1.5 bg-zinc-400 rounded-full animate-bounce [animation-delay:-0.3s]" />
-                                                    <div className="w-1.5 h-1.5 bg-zinc-400 rounded-full animate-bounce [animation-delay:-0.15s]" />
-                                                    <div className="w-1.5 h-1.5 bg-zinc-400 rounded-full animate-bounce" />
+                                                <div className="flex items-center gap-3 h-6">
+                                                    <div className="flex items-center gap-1">
+                                                        <div className="w-1.5 h-1.5 bg-zinc-400 rounded-full animate-bounce [animation-delay:-0.3s]" />
+                                                        <div className="w-1.5 h-1.5 bg-zinc-400 rounded-full animate-bounce [animation-delay:-0.15s]" />
+                                                        <div className="w-1.5 h-1.5 bg-zinc-400 rounded-full animate-bounce" />
+                                                    </div>
+                                                    {thinkingMessage && (
+                                                        <span className="text-xs text-zinc-500 animate-pulse">{thinkingMessage}</span>
+                                                    )}
                                                 </div>
                                             </div>
                                         )}
@@ -533,14 +525,14 @@ export default function AiAgent() {
                                         </div>
                                     )}
                                     {/* Flex-Wrapper Layout for Fix */}
-                                    <div className="flex items-end gap-2 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl px-3 py-2 focus-within:ring-1 focus-within:ring-zinc-300 dark:focus-within:ring-zinc-700 transition-all">
+                                    <div className="flex items-end gap-2 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl px-3 py-2 focus-within:ring-1 focus-within:ring-zinc-300 dark:focus-within:ring-zinc-700 transition-all shadow-sm">
                                         <textarea
+                                            ref={textareaRef}
                                             value={input}
                                             onChange={(e) => setInput(e.target.value)}
                                             onKeyDown={handleKeyDown}
                                             placeholder="Ask Physical AI..."
-                                            rows={1}
-                                            className="flex-1 bg-transparent border-0 p-2 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:ring-0 resize-none min-h-[40px] max-h-[160px]"
+                                            className="flex-1 bg-transparent border-0 p-2 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:ring-0 focus:outline-none outline-none resize-none min-h-[40px] max-h-[160px] overflow-y-auto"
                                         />
                                         <div className="shrink-0 pb-1">
                                             {isLoading ? (

@@ -4,7 +4,8 @@ import { DocsLayoutWrapper } from "@/components/DocsLayoutWrapper"
 import TranslationButton from "@/components/TranslationButton"
 import { DocsPager } from "@/components/DocsPager"
 
-import { EditOnGithub } from "@/components/EditOnGithub"
+
+import { ScrollToTop } from "@/components/ScrollToTop"
 
 export default function DocsLayout({
     children,
@@ -20,13 +21,13 @@ export default function DocsLayout({
                 >
                     <div className="translation-btn-container flex flex-col sm:flex-row sm:justify-between sm:items-start mb-4 gap-4">
                         <TranslationButton />
-                        <EditOnGithub />
                     </div>
                     {children}
                     <DocsPager />
                 </div>
             </div>
             <TableOfContents />
+            <ScrollToTop />
         </DocsLayoutWrapper>
     )
 }

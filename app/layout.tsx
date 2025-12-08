@@ -4,12 +4,18 @@ import './globals.css'
 import { Providers } from './providers'
 import { Navbar } from '@/components/Navbar'
 import AiAgent from '@/components/ai-agent/AiAgent'
+import GoogleOneTap from '@/components/auth/GoogleOneTap'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'Physical AI & Humanoid Robotics',
   description: 'A complete AI-native, robotics-first textbook designed for the Panaversity Hackathon.',
+  icons: {
+    icon: '/img/robotic_logo_hd_1765213513157.png',
+    shortcut: '/img/robotic_logo_hd_1765213513157.png',
+    apple: '/img/robotic_logo_hd_1765213513157.png',
+  },
 }
 
 export default function RootLayout({
@@ -25,6 +31,7 @@ export default function RootLayout({
             <Navbar />
             <main className="flex-1">{children}</main>
             <AiAgent />
+            <GoogleOneTap />
           </div>
         </Providers>
       </body>

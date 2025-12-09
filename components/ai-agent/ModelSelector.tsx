@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, ChevronDown, Search, X } from 'lucide-react';
+import { Check, ChevronDown, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useMediaQuery } from '@/hooks/use-media-query';
 
@@ -25,19 +25,13 @@ export function ModelSelector({
     icon
 }: ModelSelectorProps) {
     const [open, setOpen] = React.useState(false);
-    const [searchQuery, setSearchQuery] = React.useState("");
     const isDesktop = useMediaQuery("(min-width: 768px)");
     const containerRef = React.useRef<HTMLDivElement>(null);
-
     const [mounted, setMounted] = React.useState(false);
 
     React.useEffect(() => {
         setMounted(true);
     }, []);
-
-    const filteredOptions = options.filter(option =>
-        option.toLowerCase().includes(searchQuery.toLowerCase())
-    );
 
     React.useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -50,10 +44,6 @@ export function ModelSelector({
             return () => document.removeEventListener('mousedown', handleClickOutside);
         }
     }, [open, isDesktop]);
-
-    React.useEffect(() => {
-        if (!open) setSearchQuery("");
-    }, [open]);
 
     // Desktop Dropdown
     if (isDesktop) {
@@ -83,21 +73,9 @@ export function ModelSelector({
                             {label && (
                                 <span className="text-[10px] font-bold text-zinc-400 px-2 py-1 block uppercase tracking-wider">{label}</span>
                             )}
-                            <div className="px-2 pb-2">
-                                <div className="flex items-center gap-2 px-2 py-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-lg">
-                                    <Search size={12} className="text-zinc-400" />
-                                    <input
-                                        type="text"
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                        placeholder="Search..."
-                                        className="bg-transparent border-0 p-0 text-xs w-full focus:ring-0 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-500"
-                                        autoFocus
-                                    />
-                                </div>
-                            </div>
-                            {filteredOptions.length > 0 ? (
-                                filteredOptions.map((option) => (
+
+                            {options.length > 0 ? (
+                                options.map((option) => (
                                     <button
                                         key={option}
                                         onClick={() => {
@@ -115,7 +93,7 @@ export function ModelSelector({
                                 ))
                             ) : (
                                 <div className="px-3 py-4 text-center text-xs text-zinc-400">
-                                    No results found
+                                    No options available
                                 </div>
                             )}
                         </motion.div>
@@ -166,7 +144,7 @@ export function ModelSelector({
                                     <div className="w-12 h-1.5 bg-zinc-300 dark:bg-zinc-700 rounded-full mx-auto my-3 shrink-0" />
 
                                     <div className="px-4 pb-4 border-b border-zinc-100 dark:border-zinc-800 shrink-0">
-                                        <div className="flex items-center justify-between mb-4">
+                                        <div className="flex items-center justify-between">
                                             <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
                                                 {label || "Select Option"}
                                             </h3>
@@ -177,23 +155,12 @@ export function ModelSelector({
                                                 <X size={14} />
                                             </button>
                                         </div>
-                                        <div className="relative">
-                                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" size={16} />
-                                            <input
-                                                type="text"
-                                                value={searchQuery}
-                                                onChange={(e) => setSearchQuery(e.target.value)}
-                                                placeholder="Search models..."
-                                                className="w-full bg-zinc-100 dark:bg-zinc-950 border-0 rounded-xl py-3 pl-10 pr-4 text-sm focus:ring-0 focus:outline-none outline-none focus:bg-zinc-200 dark:focus:bg-zinc-900 transition-colors"
-                                                autoFocus
-                                            />
-                                        </div>
                                     </div>
 
                                     <div className="flex-1 overflow-y-auto p-2 min-h-0">
-                                        {filteredOptions.length > 0 ? (
+                                        {options.length > 0 ? (
                                             <div className="grid gap-1">
-                                                {filteredOptions.map((option) => (
+                                                {options.map((option) => (
                                                     <button
                                                         key={option}
                                                         onClick={() => {
@@ -218,7 +185,7 @@ export function ModelSelector({
                                             </div>
                                         ) : (
                                             <div className="py-12 text-center text-zinc-500">
-                                                <p>No models found matching {'"'}{searchQuery}{'"'}</p>
+                                                <p>No options available</p>
                                             </div>
                                         )}
                                     </div>

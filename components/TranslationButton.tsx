@@ -3,12 +3,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { Languages, Loader2, Settings2, RefreshCw, Check, Bot, X } from 'lucide-react';
+import { Languages, Loader2, Settings2, RefreshCw, Check, Bot, X, Lock } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useMediaQuery } from '@/hooks/use-media-query';
+import { AuthRequiredDialog } from './auth/AuthRequiredDialog';
 
 const MODELS: Record<string, string[]> = {
     mistral: ['mistral-large-latest', 'mistral-medium', 'mistral-small-latest', 'codestral-latest'],
@@ -103,7 +104,19 @@ export default function TranslationButton() {
         }
     };
 
-    if (!user) return null;
+    const [showAuthDialog, setShowAuthDialog] = useState(false);
+
+    // Remove the early return
+    // if (!user) return null; 
+
+    // Modified click handler wrapper
+    const handleAction = (action: () => void) => {
+        if (!user) {
+            setShowAuthDialog(true);
+            return;
+        }
+        action();
+    };
 
     const SettingsContent = () => (
         <div className="space-y-6">
@@ -155,9 +168,15 @@ export default function TranslationButton() {
 
     return (
         <div className="mb-6 relative z-20">
+            <AuthRequiredDialog
+                isOpen={showAuthDialog}
+                onClose={() => setShowAuthDialog(false)}
+                featureName="AI Translation"
+            />
+
             <div className="flex items-center gap-3 mb-4" ref={settingsRef}>
                 <button
-                    onClick={translatedContent ? () => setTranslatedContent(null) : handleTranslate}
+                    onClick={() => handleAction(translatedContent ? () => setTranslatedContent(null) : handleTranslate)}
                     disabled={isLoading}
                     className={cn(
                         "relative flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-200 shadow-sm hover:shadow-md active:scale-95",
@@ -180,15 +199,15 @@ export default function TranslationButton() {
                         <>
                             <Bot size={18} />
                             <span>Translate to Urdu</span>
-                            {/* <span className="bg-white/20 dark:bg-black/10 text-[10px] px-1.5 py-0.5 rounded-full font-bold ml-1">
-                                +50 PTS
-                            </span> */}
+                            {!user && (
+                                <Lock size={14} className="ml-1 opacity-70" />
+                            )}
                         </>
                     )}
                 </button>
 
                 <button
-                    onClick={() => setShowSettings(!showSettings)}
+                    onClick={() => handleAction(() => setShowSettings(!showSettings))}
                     className={cn(
                         "p-2.5 rounded-full border transition-all duration-200 bg-white dark:bg-zinc-950",
                         showSettings

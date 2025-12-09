@@ -2,8 +2,11 @@
 
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
-import { Edit } from 'lucide-react'
+import { Edit, Lock } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useAuth } from '@/contexts/AuthContext'
+import { useState } from 'react'
+import { AuthRequiredDialog } from './auth/AuthRequiredDialog'
 
 interface EditOnGithubProps {
     className?: string
@@ -24,6 +27,9 @@ export function EditOnGithub({
     // Remove trailing slash if present
     const cleanPath = pathname?.replace(/\/$/, '') || ''
 
+    const { user } = useAuth()
+    const [showAuthDialog, setShowAuthDialog] = useState(false)
+
     // Check if we are in the docs section
     if (!cleanPath.startsWith('/docs')) {
         return null
@@ -37,18 +43,34 @@ export function EditOnGithub({
 
     const editUrl = `${repoUrl}/blob/main/${filePath}`
 
+    const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+        if (!user) {
+            e.preventDefault();
+            setShowAuthDialog(true);
+        }
+    }
+
     return (
-        <Link
-            href={editUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={cn(
-                "inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors mb-4",
-                className
-            )}
-        >
-            <Edit className="h-4 w-4" />
-            <span>Edit this page on GitHub</span>
-        </Link>
+        <>
+            <AuthRequiredDialog
+                isOpen={showAuthDialog}
+                onClose={() => setShowAuthDialog(false)}
+                featureName="GitHub Editing"
+            />
+            <Link
+                href={editUrl}
+                onClick={handleClick}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={cn(
+                    "inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors mb-4",
+                    className
+                )}
+            >
+                <Edit className="h-4 w-4" />
+                <span>Edit this page on GitHub</span>
+                {!user && <Lock className="h-3 w-3 opacity-70" />}
+            </Link>
+        </>
     )
 }

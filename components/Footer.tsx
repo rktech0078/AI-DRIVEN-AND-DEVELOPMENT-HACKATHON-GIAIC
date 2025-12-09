@@ -212,7 +212,7 @@ export function Footer() {
                     </p>
                     <div className="flex items-center gap-8 text-xs text-zinc-400 font-medium">
                         <Link href="#" className="hover:text-zinc-900 dark:hover:text-white transition-colors relative group">
-                            Privacy Policy
+                            Privacy
                             <span className="absolute -bottom-1 left-0 w-0 h-px bg-zinc-900 dark:bg-white transition-all duration-300 group-hover:w-full" />
                         </Link>
                         <Link href="https://ai-hackathon-giaic.vercel.app/docs" className="hover:text-zinc-900 dark:hover:text-white transition-colors relative group">

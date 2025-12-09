@@ -3,18 +3,27 @@
 import { authClient } from "@/lib/auth-client"
 import { useEffect } from "react"
 import Script from "next/script"
+import { useAuth } from "@/contexts/AuthContext"
 
 export default function GoogleOneTap() {
+    const { user, loading } = useAuth()
+
     useEffect(() => {
-        const checkAndRun = async () => {
-            try {
-                await authClient.oneTap()
-            } catch (e) {
-                console.error("GoogleOneTap Error:", e)
+        if (!loading && !user) {
+            const checkAndRun = async () => {
+                try {
+                    await authClient.oneTap()
+                } catch (e) {
+                    console.error("GoogleOneTap Error:", e)
+                }
             }
+            checkAndRun()
         }
-        checkAndRun()
-    }, [])
+    }, [loading, user])
+
+    if (loading || user) {
+        return null
+    }
 
     return (
         <Script

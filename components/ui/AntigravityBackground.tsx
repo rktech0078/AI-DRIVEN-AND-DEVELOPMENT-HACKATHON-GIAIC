@@ -28,7 +28,7 @@ export function AntigravityBackground() {
 
         let animationFrameId: number
         let particles: Particle[] = []
-        let mouse = {
+        const mouse = {
             x: -1000,
             y: -1000,
             radius: 150

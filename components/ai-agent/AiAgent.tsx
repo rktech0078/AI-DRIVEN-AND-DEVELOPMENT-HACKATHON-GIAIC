@@ -348,15 +348,15 @@ export default function AiAgent() {
                             className="fixed inset-0 sm:relative sm:inset-auto w-full h-[100dvh] sm:h-[85vh] sm:max-w-4xl bg-white dark:bg-zinc-950 sm:rounded-2xl shadow-2xl flex flex-col border-0 sm:border border-zinc-200 dark:border-zinc-800"
                         >
                             {/* Header */}
-                            <header className="flex flex-wrap gap-2 items-center justify-between px-4 py-3 border-b border-zinc-100 dark:border-zinc-800 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md z-20 shrink-0">
-                                <div className="flex items-center gap-3 mr-auto">
-                                    <div className="w-8 h-8 flex items-center justify-center bg-zinc-100 dark:bg-zinc-900 rounded-lg">
-                                        <RoboticIcon className="w-5 h-5 text-zinc-900 dark:text-zinc-100" />
+                            <header className="flex gap-2 items-center justify-between px-3 py-2 sm:px-4 sm:py-3 border-b border-zinc-100 dark:border-zinc-800 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md z-20 shrink-0">
+                                <div className="flex items-center gap-2 sm:gap-3 mr-auto min-w-0">
+                                    <div className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center bg-zinc-100 dark:bg-zinc-900 rounded-lg shrink-0">
+                                        <RoboticIcon className="w-4 h-4 sm:w-5 sm:h-5 text-zinc-900 dark:text-zinc-100" />
                                     </div>
-                                    <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 hidden xs:inline-block">Physical AI</span>
+                                    <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 hidden sm:inline-block">Physical AI</span>
                                 </div>
 
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar">
                                     {/* Dynamic Provider Selector */}
                                     <ModelSelector
                                         label="Select Provider"

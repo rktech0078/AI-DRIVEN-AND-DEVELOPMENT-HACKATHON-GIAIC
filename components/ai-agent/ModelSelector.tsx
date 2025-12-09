@@ -110,15 +110,15 @@ export function ModelSelector({
                 <button
                     onClick={() => setOpen(true)}
                     className={cn(
-                        "h-8 px-3 rounded-lg transition-all text-xs font-medium flex items-center gap-2 border",
+                        "h-7 px-2 rounded-lg transition-all text-[10px] font-medium flex items-center gap-1.5 border",
                         open
                             ? "bg-zinc-100 dark:bg-zinc-800 border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100"
                             : "bg-white dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-900"
                     )}
                 >
                     {icon}
-                    <span className="truncate max-w-[100px]">{value || placeholder}</span>
-                    <ChevronDown size={12} className="shrink-0 opacity-50" />
+                    <span className="truncate max-w-[60px] xs:max-w-[80px]">{value || placeholder}</span>
+                    <ChevronDown size={10} className="shrink-0 opacity-50" />
                 </button>
 
                 {mounted && createPortal(

@@ -52,7 +52,7 @@ export function ModelSelector({
                 <button
                     onClick={() => setOpen(!open)}
                     className={cn(
-                        "h-8 px-3 rounded-lg transition-all text-xs font-medium flex items-center gap-2 border max-w-[200px]",
+                        "h-7 px-2 rounded-lg transition-all text-[11px] font-medium flex items-center gap-1.5 border max-w-[200px]",
                         open
                             ? "bg-zinc-100 dark:bg-zinc-800 border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100"
                             : "bg-white dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-900"

@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { motion } from "framer-motion"
 import { ArrowRight, Brain, Component, Cpu, Globe, Layers, Zap } from "lucide-react"
+import { AntigravityBackground } from "@/components/ui/AntigravityBackground"
 
 type IconComponent = React.ComponentType<{ className?: string }>;
 
@@ -29,9 +30,10 @@ function FeatureCard({ icon: Icon, title, description, delay }: { icon: IconComp
 export default function Home() {
     return (
         <div className="flex flex-col min-h-screen">
+            <AntigravityBackground />
+
             {/* Hero Section */}
-            <section className="relative flex flex-col items-center justify-center px-4 pt-24 pb-32 text-center overflow-hidden">
-                <div className="absolute inset-0 -z-10 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
+            <section className="relative z-10 flex flex-col items-center justify-center px-4 pt-24 pb-32 text-center overflow-hidden">
 
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -71,7 +73,7 @@ export default function Home() {
             </section>
 
             {/* Features Grid */}
-            <section className="container max-w-6xl mx-auto px-4 pb-24">
+            <section className="container relative z-10 max-w-6xl mx-auto px-4 pb-24">
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                     <FeatureCard
                         icon={Brain}

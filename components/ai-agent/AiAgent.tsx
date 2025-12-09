@@ -356,7 +356,7 @@ export default function AiAgent() {
                                     <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 hidden sm:inline-block">Physical AI</span>
                                 </div>
 
-                                <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar">
+                                <div className="flex items-center gap-1.5 sm:gap-2 md:overflow-visible overflow-x-auto no-scrollbar">
                                     {/* Dynamic Provider Selector */}
                                     <ModelSelector
                                         label="Select Provider"

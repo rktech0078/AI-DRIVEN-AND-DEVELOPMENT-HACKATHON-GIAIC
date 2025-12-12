@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
     X, Sparkles, Bot, Copy,
-    ThumbsUp, Check, Square, ArrowUp, Zap, Layers
+    ThumbsUp, Check, Square, ArrowUp, Zap, Layers, Loader2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -24,11 +24,14 @@ type Message = {
 type Provider = 'gemini' | 'openrouter' | 'groq' | 'mistral';
 
 const MODELS = {
-    mistral: ['mistral-large-latest', 'mistral-medium', 'mistral-small-latest', 'codestral-latest'],
-    gemini: ['gemini-2.0-flash', 'gemini-2.5-flash', 'gemini-2.5-flash-lite'],
-    openrouter: ['openrouter/auto', 'nvidia/nemotron-nano-9b-v2:free', 'google/gemini-2.0-flash-exp:free', 'qwen/qwen3-235b-a22b:free', 'mistralai/mistral-7b-instruct:free', 'deepseek/deepseek-r1:free', 'google/gemma-2-9b-it:free', 'qwen/qwen3-coder:free', 'tngtech/deepseek-r1t2-chimera:free'],
-    groq: ['meta-llama/llama-3.3-70b-instruct:free', 'meta-llama/llama-3.2-3b-instruct:free', 'google/gemma-2-9b-it:free', 'qwen/qwen-2-7b-instruct:free', 'openchat/openchat-3.5-0106:free', 'groq/openai/gpt-oss-120b', 'groq/moonshotai/kimi-k2-instruct-0905', 'meta-llama/llama-4-scout-17b-16e-instruct', 'llama-3.3-70b-versatile'],
+    mistral: ['mistral-small-latest', 'mistral-large-latest', 'mistral-medium', 'codestral-latest'],
+    gemini: ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-2.0-flash'],
+    openrouter: ['openrouter/auto', 'nvidia/nemotron-nano-9b-v2:free', 'qwen/qwen3-coder:free', 'tngtech/deepseek-r1t2-chimera:free'],
+    groq: ['meta-llama/llama-4-scout-17b-16e-instruct', 'llama-3.3-70b-versatile'],
 };
+
+// OPENROUTER MODELS = ['google/gemini-2.0-flash-exp:free', 'google/gemma-2-9b-it:free', 'qwen/qwen3-235b-a22b:free', 'mistralai/mistral-7b-instruct:free', 'deepseek/deepseek-r1:free',]
+// GROQ MODELS = ['meta-llama/llama-3.3-70b-instruct:free', 'meta-llama/llama-3.2-3b-instruct:free', 'google/gemma-2-9b-it:free', 'qwen/qwen-2-7b-instruct:free', 'openchat/openchat-3.5-0106:free', 'groq/openai/gpt-oss-120b', 'groq/moonshotai/kimi-k2-instruct-0905', ]
 
 export default function AiAgent() {
     const { isOpen, setIsOpen } = useAiAgent();
@@ -173,8 +176,8 @@ export default function AiAgent() {
         const providersList: Provider[] = [
             provider, // First try selected
             'gemini',
-            'groq',
             'openrouter',
+            'groq',
             'mistral'
         ].filter((p, index, self) => self.indexOf(p) === index) as Provider[]; // Dedupe
 
@@ -185,7 +188,7 @@ export default function AiAgent() {
             for (const currentProvider of providersList) {
                 try {
                     if (currentProvider !== provider) {
-                        setThinkingMessage(`Thinking... (Switching to ${currentProvider}...)`);
+                        setThinkingMessage(`Thinking... \n (Switching to ${currentProvider}...)`);
                     }
 
                     const currentModel = currentProvider === provider ? model : MODELS[currentProvider][0];
@@ -494,16 +497,32 @@ export default function AiAgent() {
                                         ))}
                                         {isLoading && (
                                             <div className="flex gap-4">
-                                                <RoboticIcon className="w-6 h-6 text-zinc-900 dark:text-zinc-100 shrink-0" />
-                                                <div className="flex items-center gap-3 h-6">
-                                                    <div className="flex items-center gap-1">
-                                                        <div className="w-1.5 h-1.5 bg-zinc-400 rounded-full animate-bounce [animation-delay:-0.3s]" />
-                                                        <div className="w-1.5 h-1.5 bg-zinc-400 rounded-full animate-bounce [animation-delay:-0.15s]" />
-                                                        <div className="w-1.5 h-1.5 bg-zinc-400 rounded-full animate-bounce" />
+                                                <div className="shrink-0 mt-0.5">
+                                                    <RoboticIcon className="w-6 h-6 text-zinc-900 dark:text-zinc-100" />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <div className="flex items-center gap-2">
+                                                        <Loader2 className="w-4 h-4 text-zinc-400 animate-spin" />
+                                                        <span className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+                                                            Thinking...
+                                                        </span>
                                                     </div>
-                                                    {thinkingMessage && (
-                                                        <span className="text-xs text-zinc-500 animate-pulse">{thinkingMessage}</span>
-                                                    )}
+                                                    
+                                                    <AnimatePresence mode="wait">
+                                                        {thinkingMessage && (
+                                                            <motion.div
+                                                                initial={{ opacity: 0, y: -5, height: 0 }}
+                                                                animate={{ opacity: 1, y: 0, height: 'auto' }}
+                                                                exit={{ opacity: 0, y: -5, height: 0 }}
+                                                                className="flex items-center gap-2 px-3 py-2 bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800 rounded-lg"
+                                                            >
+                                                                <div className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse" />
+                                                                <span className="text-xs text-zinc-600 dark:text-zinc-300 font-mono">
+                                                                    {thinkingMessage.replace('Thinking... \n ', '')}
+                                                                </span>
+                                                            </motion.div>
+                                                        )}
+                                                    </AnimatePresence>
                                                 </div>
                                             </div>
                                         )}

@@ -15,10 +15,22 @@ To enable the "Plan A" Keep-Alive system, you need to add your production URL as
         *(Replace with your actual Vercel live URL)*
 7.  Click **Add secret**.
 
-## Verification
-Once added, the workflow defined in `.github/workflows/keep-alive.yml` will automatically:
-*   Run every 6 hours.
-*   Ping your `/api/cron/keep-alive` endpoint.
-*   Log a ✅ Success if it gets a 200 OK.
+## How to Verify (Step-by-Step) ✅
 
-You can manually test it by going to the **Actions** tab -> **Supabase Keep-Alive** -> **Run workflow**.
+1.  **Open GitHub Actions:**
+    *   Go to your repository's **"Actions"** tab.
+    *   On the left sidebar, click **"Supabase Keep-Alive (Plan A)"**.
+
+2.  **Trigger Manually:**
+    *   Click the **"Run workflow"** dropdown button on the right side.
+    *   Select the branch (usually `main`) and click the green **"Run workflow"** button.
+
+3.  **Check Results:**
+    *   Wait a few seconds for the new run to appear in the list.
+    *   **Click on the run title** (e.g., "Supabase Keep-Alive (Plan A) #1").
+    *   Click on the **"ping"** job button on the left or in the visualization graph.
+    *   Expand the **"Ping Keep-Alive Endpoint"** step.
+    *   Look for the log output:
+        > `✅ Success! Status Code: 200`
+
+If you see the green checkmark and status 200, **Plan A is working!** 🎉
